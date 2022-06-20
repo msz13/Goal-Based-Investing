@@ -8,3 +8,4 @@ https://backtest.curvo.eu/funds
 
 1. MSCI Japan
 2. MSCI Pacyfic ex Japan
+3. S&P 500

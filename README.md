@@ -10,3 +10,4 @@ https://backtest.curvo.eu/funds
 2. MSCI Pacyfic ex Japan
 3. S&P 500
 4. Bloomberg Barclays Global Aggregate Bond (GAB)
+5. Bloomberg Barclays Global Aggregate Corporate (GAC)

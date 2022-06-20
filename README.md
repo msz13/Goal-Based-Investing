@@ -12,3 +12,6 @@ https://backtest.curvo.eu/funds
 4. Bloomberg Barclays Global Aggregate Bond (GAB)
 5. Bloomberg Barclays Global Aggregate Bond Euro Hedged (GABHDG)
 6. Bloomberg Barclays Global Aggregate Corporate (GAC)
+7. Gold spot price
+
+

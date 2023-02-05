@@ -16,7 +16,7 @@ def deductE(row, logW0):
 def __prob2(W0, W1, mean, std, h):
     return norm.pdf((np.log(W1/W0)-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
 
-def generateGrid(W0, T, iMax, minMean, minStd, maxMean, maxStd):
+def generateGrid(W0, T, iMax, minMean, minStd, maxMean, maxStd) ->np.array:
     grid = np.zeros((T,iMax))
     logW0 = np.log(W0)
     for t in range(1,T+1):
@@ -28,14 +28,17 @@ def generateGrid(W0, T, iMax, minMean, minStd, maxMean, maxStd):
     return np.exp(grid)
 
 def calculateTransitionPropabilities(portfolioMeasures, W0, W1, h=1):
-    p = np.fromiter((__prob2(W0,W,portfolioMeasures[0],portfolioMeasures[1],h) for W in W1),np.float64)
+    p = __prob2(W0,W1,portfolioMeasures[0], portfolioMeasures[1],1)
     return p/p.sum()
 
+def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, W0, W1, h=1):
+    return []
 
-def belmanEqutation(W0, W1, portfoliosMeasures: pd.DataFrame):
-    propabilities = portfoliosMeasures.apply(calculateTransitionPropabilities, axis=1, result_type='expand', W0=W0, W1=W1)
-    values = np.multiply(W1, propabilities).sum(1)
-    return np.where(values == np.amax(values))[0][0]
+def reachedGoal(W, goal=160):
+    reachedGoal = W >= goal
+    return reachedGoal.astype(int)
+
+
   
 
 def getStrategiesGrid(grid: np.array, W0, portfoliosMeasures):
@@ -44,8 +47,7 @@ def getStrategiesGrid(grid: np.array, W0, portfoliosMeasures):
     iMax = grid.shape[1]
     
     for t in range(T):        
-        for i in range(iMax):
-            strategiesGrid[t,i] = belmanEqutation(grid[T-t-1,i], grid[T-1],portfoliosMeasures)
+        strategiesGrid[t] = belmanEqutation(grid[T-t-1], grid[T-1],portfoliosMeasures)
     return strategiesGrid
         
         

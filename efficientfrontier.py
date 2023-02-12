@@ -22,4 +22,4 @@ def optimize(expectedMean, means: np.array, cov_table: np.array):
     result = minimize(obj,start,constraints=[constraint1, constraint2],bounds=[(0,1) for n in range(len(means))])
     #result = np.append(result.x, [expectedMean], [result.fun])    
 
-    return result.x
+    return result.x, result

@@ -7,7 +7,7 @@ def WMax(t,W0, infusions, meanMax,stdMin,stdMax):
     for i in range(t):
         valueOfInfusions += infusions[i]*np.exp((meanMax - (stdMin**2)/2)*(t-i) + (3*stdMax*np.sqrt(t-i)))
                                                            
-    return W0*np.exp((meanMax-(stdMin**2/2))*t + 3*stdMax*np.sqrt(t) + valueOfInfusions)
+    return W0*np.exp((meanMax-(stdMin**2/2))*t + 3*stdMax*np.sqrt(t)) + valueOfInfusions
 def WMin(t, W0, meanMin, stdMin, stdMax):
     return W0*np.e**((meanMin-stdMax**2/2)*t - 3*stdMax*np.sqrt(t))
 def Wi(i, imax, Wmin, Wmax):

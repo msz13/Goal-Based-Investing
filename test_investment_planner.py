@@ -13,8 +13,10 @@ def test_should_simulateporfolio_values_without_cashflows():
     infusion = 0
     infusionInterval = 0
     infusionGrowth = 0
+    goals = [0,0,0,0]
 
-    investent_planner.set_params(T,W0, infusion, infusionInterval, portfolios)
+    investent_planner.set_params(T,W0, infusion, infusionInterval, goals, portfolios)
+    
 
     grid = investent_planner.grid
 
@@ -28,19 +30,20 @@ def test_should_simulateporfolio_values_without_cashflows():
 def test_should_simulateporfolio_values_with_infusions():
     
     investent_planner = InvestmentPlanner()
-    portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
+    portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057], [0.0886, 0.1954]])
     W0 = 100
     T = 1
     iMax = 5
     infusion = 10
     infustionInteval = 1
     infusionGrowth = 0
-    investent_planner.set_params(T,W0, infusion, infustionInteval, portfolios)
+    goals = [0,1]
+    investent_planner.set_params(T,W0, infusion, infustionInteval, goals, portfolios)
 
     grid = investent_planner.grid
 
-    expected_grid = [[ 51.63085692,  71.85461497, 100. , 139.16990585, 193.68262695]]
-    
+    expected_grid = [[ 0.53, 71.85461497, 100., 139.16990585, 193.68262695]]
+        
     assert grid.shape == (1,5)
     npt.assert_array_almost_equal(expected_grid, grid, 4)
     

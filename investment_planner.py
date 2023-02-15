@@ -28,9 +28,13 @@ def __prob2(W0, W1, mean, std, h):
 def generateGrid(W0, T, iMax, infusions, goals, minMean, minStd, maxMean, maxStd) ->np.array:
     grid = np.zeros((T,iMax))
     logW0 = np.log(W0)
+    Wmin = 1
     for t in range(1,T+1):
-        row = np.linspace(np.log(WMin(t,W0,infusions,goals, minMean,minStd,maxStd)),np.log(WMax(t,W0, infusions, maxMean,minStd, maxStd)),iMax)
-        #row = deductE(row,logW0)
+        wMin = WMin(t,W0,infusions,goals, minMean,minStd,maxStd)
+        wMin = Wmin if wMin < Wmin else wMin
+        wMax = WMax(t,W0, infusions, maxMean,minStd, maxStd)
+        row = np.linspace(np.log(wMin),np.log(wMax),iMax)
+        row = deductE(row,logW0)
         grid[t-1] = row
     return np.exp(grid)
 
@@ -38,8 +42,6 @@ def calculateTransitionPropabilities(portfolioMeasures, W0, W1, h=1):
     p = __prob2(W0,W1,portfolioMeasures[0], portfolioMeasures[1],1)
     return p/p.sum()
 
-def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, W0, W1, h=1):
-    return []
 
 def reachedGoal(W, goal=160):
     reachedGoal = W >= goal
@@ -65,7 +67,8 @@ def get_strategies(V):
 class InvestmentPlanner:
        
     def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: np.array, portfolios: np.ndarray):
-        iMax = 5
-        infusions = np.full(T,infusion)       
+        iMax = 8
+        infusions = np.full(T+1,infusion)   
+        infusions[0] = 0    
         self.grid = generateGrid(W0, T, iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
     

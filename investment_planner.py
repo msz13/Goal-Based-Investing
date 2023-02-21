@@ -47,12 +47,14 @@ def reachedGoal(W, goal=160):
     reachedGoal = W >= goal
     return reachedGoal.astype(int)
 
-def calculateValuesForLastPeriod(W, k):
-    values = np.zeros(len(W))
-    ki = k[0]
-    for i in range(len(W)):
-        values[i] = ki[1] if W[i] >= ki[0] else 0
-    return values
+def calculateValuesForLastPeriod(W: np.array, k: np.array):
+    values = np.zeros((len(k), len(W)))
+    for i in range(len(k)):
+        values[i] = np.where(W >= k[i,0], k[i,1], 0 )
+    return np.amax(values, axis=0)
+
+def calculateValues(W: np.array, k: np.array):
+    return
 
 
 def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, WT: np.array, WT1: np.array, h=1):

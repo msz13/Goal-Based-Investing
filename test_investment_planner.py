@@ -1,5 +1,5 @@
 import pytest
-from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValuesForLastPeriod
+from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValues, calculateValuesForLastPeriod
 import numpy.testing as npt
 import numpy as np
 
@@ -96,13 +96,22 @@ def test_generate_propabilities():
     npt.assert_almost_equal(propabilities,expected_propabilities,3)
 
 def test_should_calclulate_values_for_last_period():
-    k = [[105,100]]
-    wealthInT = [90,95,100,105,110]
-    expectedValues = [0,0,0,100,100]
+    k = np.array([[105,100],[110,200],[215,300]])
+    wealthInT = np.array([90,95,100,105,110])
+    expectedValues = [0,0,0,100,200]
 
     V = calculateValuesForLastPeriod(wealthInT,k)    
 
     npt.assert_array_equal(V,expectedValues)
+
+def test_should_calclulate_values_for_every_period():
+    k = np.array([[105,100],[110,200]])
+    VT1 = np.array([18., 33.25, 20., 15.75, 11.])
+    #expectedValues = [0,0,0,100,200]
+
+    #V = calculateValues(WT1,k)  ?  
+
+    #npt.assert_array_equal(V,expectedValues)    
 
 
 

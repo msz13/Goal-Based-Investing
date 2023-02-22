@@ -38,8 +38,13 @@ def generateGrid(W0, T, iMax, infusions, goals, minMean, minStd, maxMean, maxStd
 def __prob2(W0, W1, mean, std, h):
     return norm.pdf((np.log(W1/W0)-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
 
-def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, h=1):
-    p = __prob2(W0,W1,portfolioMeasures[0], portfolioMeasures[1],h)
+def __prob(W0, W1, mean, std, Infusion, Cost, h):
+    return norm.pdf((np.log(W1/(W0+Infusion+Cost))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
+
+def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, Infusion, Cost, h=1):
+    mean = portfolioMeasures[0]
+    std = portfolioMeasures[1]
+    p = norm.pdf((np.log(W1/(W0+Infusion+Cost))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
     return p/p.sum()
 
 

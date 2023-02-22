@@ -1,5 +1,5 @@
 import pytest
-from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValues, calculateValuesForLastPeriod
+from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValues, calculateValuesForLastPeriod, calculateTransitionPropabilities
 import numpy.testing as npt
 import numpy as np
 
@@ -103,6 +103,51 @@ def test_should_calclulate_values_for_last_period():
     V = calculateValuesForLastPeriod(wealthInT,k)    
 
     npt.assert_array_equal(V,expectedValues)
+
+def test_should_calculate_transition_propabilities():
+    portfolio = np.array([0.0526, 0.0374])
+    W0 = 100
+    W1 = np.array([100,103,105,110])
+    infusions = 2
+    cost = 3
+    h = 1
+
+    expectedPropabilities = np.array([0.02, 0.1 , 0.24, 0.63])
+
+    propability = calculateTransitionPropabilities(portfolio, W0, W1, infusions, cost, h)    
+
+    npt.assert_array_almost_equal(propability,expectedPropabilities,2)
+
+def test_should_calculate_transition_propabilities_for_all_portfolios():
+    portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
+    W0 = 100
+    W1 = np.array([100,103,105,110])
+    infusions = 2
+    cost = 3
+    h = 1
+
+    expectedPropabilities = np.array([[[0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63]],
+                                       
+                                       [[0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63]],
+
+                                       [[0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63]],
+                                       
+                                       [[0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63],
+                                       [0.02, 0.1 , 0.24, 0.63]]
+                                       ])
+
+    propability = calculateTransitionPropabilitiesForAllPorfolios(portfolios, W0, W1, infusions, cost, h)    
+
+    npt.assert_array_almost_equal(propability,expectedPropabilities,2)
+
+
 
 def test_should_calclulate_values_for_every_period():
     k = np.array([[105,100],[110,200]])

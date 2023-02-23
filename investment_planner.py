@@ -41,10 +41,10 @@ def __prob2(W0, W1, mean, std, h):
 def __prob(W0, W1, mean, std, Infusion, Cost, h):
     return norm.pdf((np.log(W1/(W0+Infusion+Cost))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
 
-def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, Infusion, Cost, h=1):
+def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, infusions, costs, h=1):
     mean = portfolioMeasures[0]
     std = portfolioMeasures[1]
-    p = norm.pdf((np.log(W1/(W0+Infusion+Cost))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
+    p = norm.pdf((np.log(W1/(W0+infusions+costs))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
     return p/p.sum()
 
 
@@ -62,11 +62,11 @@ def calculateValues(W: np.array, k: np.array):
     return
 
 
-def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, WT: np.array, WT1: np.array, h=1):
+def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, WT: np.array, WT1: np.array, infusions, costs, h=1):
     i = len(WT1)
     probabilities = np.zeros((i,len(portfolioMeasures),i),np.float64)
     for i in range(i):
-        probabilities[i] = np.apply_along_axis(calculateTransitionPropabilities,1,portfolioMeasures, W0=WT[i], W1=WT1)
+        probabilities[i] = np.apply_along_axis(calculateTransitionPropabilities,1,portfolioMeasures, W0=WT[i], W1=WT1, infusions=infusions, costs=costs, h=1)
     return probabilities
 
 

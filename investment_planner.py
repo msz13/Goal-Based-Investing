@@ -70,11 +70,15 @@ def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, WT: np.ar
     return probabilities
 
 
-def get_strategies(V):
+def get_portfolios_strategies(VT1, propabilities):
+    V = VT1 * propabilities
     sums = V.sum(2)
     maxes = np.amax(sums,1)
     porfolio_ids = np.argmax(sums,1)
     return porfolio_ids, maxes
+
+def get_goals_strategies():
+    return
 
 
 def generateGlidePath(W0, goal, T, portfolioMeasures):
@@ -118,7 +122,7 @@ class InvestmentPlanner:
         V[T-1] = reachedGoal(self.grid[T-1],goals[-1])   
 
         for t in range(T-2,0,-1):
-            probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,self.grid[t],self.grid[t+1])
+            probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,self.grid[t],self.grid[t+1], infusions, goals)
             VT = V[t+1] * probabilities        
             porfolios_ids, VT_max = get_strategies(VT)
             V[t] = VT_max  

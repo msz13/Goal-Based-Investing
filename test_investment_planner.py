@@ -1,5 +1,5 @@
 import pytest
-from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValues, calculateValuesForLastPeriod, calculateTransitionPropabilities
+from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValuesForLastPeriod, calculateTransitionPropabilities, get_portfolios_strategies, get_goals_strategies
 import numpy.testing as npt
 import numpy as np
 
@@ -147,15 +147,52 @@ def test_should_calculate_transition_propabilities_for_all_portfolios():
     npt.assert_array_almost_equal(propability,expectedPropabilities,2)
 
 
+def test_should_get_strategies_for_porfolios(): 
+   
+    goals = [0, 0, 65]
 
-def test_should_calclulate_values_for_every_period():
-    k = np.array([[105,100],[110,200]])
-    VT1 = np.array([18., 33.25, 20., 15.75, 11.])
-    #expectedValues = [0,0,0,100,200]
+    VT1 = [0,0,100,100]
+    
+    propabilities = np.array([[[0.451, 0.334, 0.197, 0.018],
+                                    [0.271, 0.27,  0.258, 0.2  ],
+                                    [0.255, 0.256, 0.253, 0.237]],
 
-    #V = calculateValues(WT1,k)  ?  
+                                    [[0.14,  0.307, 0.366, 0.187],
+                                    [0.221, 0.254, 0.266, 0.259],
+                                    [0.24,  0.251, 0.255, 0.254]],
 
-    #npt.assert_array_equal(V,expectedValues)    
+                                    [[0.017, 0.105, 0.244, 0.634],
+                                    [0.177, 0.234, 0.268, 0.322],
+                                    [0.227, 0.246, 0.256, 0.271]],
+
+                                    [[0.001, 0.017, 0.075, 0.908],
+                                    [0.14,  0.211, 0.262, 0.387],
+                                    [0.215, 0.241, 0.257, 0.288]]])
+    
+    expectedValues = [49., 55.3, 87.8, 98.3]
+    expectedStrategies = [2,0,0,0]
+
+    porfolioIds, values = get_portfolios_strategies(VT1, propabilities)
+
+    npt.assert_almost_equal(porfolioIds, expectedStrategies)
+    npt.assert_almost_equal(values, expectedValues, 3)
+
+
+def test_should_get_goals_strategies():
+
+    goals = [[0,0], [50, 80], [30, 50]]
+
+    VT1 = [0,0, 100, 100]
+    VT = [49., 55.3, 87.8, 98.3]
+    Wt = [90,95,100,105]
+    porfolioStrategies = [2,0,0,0]
+
+    strategies = get_goals_strategies(goals, VT1, VT, Wt, porfolioStrategies)
+
+    expectedStrategies = 
+    
+    
+ 
 
 
 

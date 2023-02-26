@@ -44,7 +44,7 @@ def __prob(W0, W1, mean, std, Infusion, Cost, h):
 def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, infusions, costs, h=1):
     mean = portfolioMeasures[0]
     std = portfolioMeasures[1]
-    p = norm.pdf((np.log(W1/(W0+infusions+costs))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
+    p = norm.pdf((np.log(W1/(W0+infusions-costs))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
     return p/p.sum()
 
 

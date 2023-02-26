@@ -189,7 +189,9 @@ def test_should_get_goals_strategies():
 
     strategies = get_goals_strategies(goals, VT1, VT, Wt, porfolioStrategies)
 
-    expectedStrategies = 
+    #assert shape
+    # in range len of k
+    
     
     
  

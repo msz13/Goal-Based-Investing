@@ -74,14 +74,48 @@ def get_portfolios_strategies(VT1, propabilities):
     V = VT1 * propabilities
     sums = V.sum(2)
     maxes = np.amax(sums,1)
-    porfolio_ids = np.argmax(sums,1)
-    return porfolio_ids, maxes
+    portfolios_ids = np.argmax(sums,1)
+    chosen_propabilities = np.take_along_axis(propabilities,np.expand_dims(portfolios_ids,axis=(0,1)),1)
+    return portfolios_ids, maxes, chosen_propabilities
 
-def get_goals_strategies():
-    return
+def __get_value_index(WT, wealth_value):
+    difference = np.absolute(WT - wealth_value)
+    index = np.argmin(difference)
+    return index
 
 
-def generateGlidePath(W0, goal, T, portfolioMeasures):
+def get_goals_strategies(goals, Wt, Wt1, VTk0, VTK1, porfolio_strategies, porfolios):
+    k = len(goals)
+    i = len(Wt)
+    porfolios_strategies = np.zeros((k, i))
+    propabilities_kc = np.zeros((k, i))
+    values = np.zeros((k, i)) 
+    Wtc = - np.tile(Wt,(k,1)) - np.repeat(goals[:,0],i).reshape((k,i))
+    Wtc[Wtc < 0] = 0
+    
+    for k in range(k):
+        for i in range(i):
+            if Wt[i] > goals[k][0]:
+                value_index = __get_value_index(Wt, Wtc[k,i])
+                portfolio_strategy = porfolio_strategies[value_index]
+                probabilities = calculateTransitionPropabilities(porfolios[portfolio_strategy],Wt[i],Wt1,0,0)
+                values[k,i] = (probabilities * VTK1).sum()+ goals[k,1]
+                porfolios_strategies[k,i] = portfolio_strategy
+                             
+                          
+    values = np.concatenate((np.expand_dims(VTk0, axis=0),values), axis=0)
+    strategies = values.argmax(0)
+    return strategies, porfolio_strategies, values, propabilities_kc
+   
+
+# REFACTOR obliczyc vector wt-kc, zamienić minusowe liczby na zero
+# dla każdej wartości wiekszej od zero wziac odpowiadnia strategie porfolio, obliczyc transition prob
+# obliczxyc values
+# trzeba zmienic strategie porfolio na te ktore wynikja z goals
+
+
+
+''' def generateGlidePath(W0, goal, T, portfolioMeasures):
     iMax = 475
     grid = generateGrid(W0,T,iMax,meanMin,stdMin,meanMax,stdMax)
     strategies = np.zeros((T,iMax))
@@ -101,34 +135,29 @@ def generateGlidePath(W0, goal, T, portfolioMeasures):
         chosen_propabilities = np.take_along_axis(probabilities,np.expand_dims(porfolios_ids,axis=(0,1)),1)
         probabilitiesT[t] = chosen_propabilities[:,0,:]
 
-    return strategies, grid
+    return strategies, grid '''
 
 
 
 class InvestmentPlanner:
        
     def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: np.array, portfolios: np.ndarray):
-        self.iMax = 8
+        self.iMax = 500
         infusions = np.full(T+1,infusion)   
         infusions[0] = 0    
-        self.grid = generateGrid(W0, T, self.iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
+        self.grid = generateGrid(W0, T, self.iMax, infusions, goals[:,0], portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
 
         self._strategies = np.zeros((T,self.iMax))
         V = np.zeros((T,self.iMax))
         self.probabilitiesT = np.zeros((T,self.iMax,self.iMax))
-
-        indexOf100 = np.where(self.grid[1]==100)
-
-        V[T-1] = reachedGoal(self.grid[T-1],goals[-1])   
-
+       
         for t in range(T-2,0,-1):
-            probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,self.grid[t],self.grid[t+1], infusions, goals)
-            VT = V[t+1] * probabilities        
-            porfolios_ids, VT_max = get_strategies(VT)
+            transition_probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,self.grid[t],self.grid[t+1], infusions[t], 0)
+            porfolios_ids, VT_max_k0, k0_probabilities = get_portfolios_strategies(V[t+1],transition_probabilities)
+            goal_ids, VT_max = get_goals_strategies(goals,self.grid[t], VT_max_k0)
             V[t] = VT_max  
-            self.__strategies[t] = porfolios_ids  
-            chosen_propabilities = np.take_along_axis(probabilities,np.expand_dims(porfolios_ids,axis=(0,1)),1)
-            self.probabilitiesT[t] = chosen_propabilities[:,0,:]
+            self._strategies[t] = porfolios_ids  
+            self.probabilitiesT[t] = k0_probabilities[:,0,:]
 
         self._calculate_cumulative_propabilities(T, self.probabilitiesT)
     
@@ -146,6 +175,10 @@ class InvestmentPlanner:
     @property    
     def glide_paths(self):
         return self._strategies.T
+    
+   
+
+    
 
    
     

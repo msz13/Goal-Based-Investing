@@ -84,28 +84,36 @@ def __get_value_index(WT, wealth_value):
     return index
 
 
-def get_goals_strategies(goals, Wt, Wt1, VTk0, VTK1, porfolio_strategies, porfolios):
+def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios):
     k = len(goals)
     i = len(Wt)
+
+    probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,Wt,Wt1,infusion,0)
+    portfolios_strategies, VTk0, chosen_propabilities = get_portfolios_strategies(VTK1,probabilities)
+
     porfolios_strategies = np.zeros((k, i))
-    propabilities_kc = np.zeros((k, i))
-    values = np.zeros((k, i)) 
+    propabilities_kc = np.zeros((k+1, i, len(Wt1)))
+    values = np.zeros((k+1, i)) 
     Wtc = - np.tile(Wt,(k,1)) - np.repeat(goals[:,0],i).reshape((k,i))
     Wtc[Wtc < 0] = 0
+    
+    values[0] = VTk0
+    propabilities_kc[0] = chosen_propabilities[:,0,:]
     
     for k in range(k):
         for i in range(i):
             if Wt[i] > goals[k][0]:
                 value_index = __get_value_index(Wt, Wtc[k,i])
-                portfolio_strategy = porfolio_strategies[value_index]
-                probabilities = calculateTransitionPropabilities(porfolios[portfolio_strategy],Wt[i],Wt1,0,0)
-                values[k,i] = (probabilities * VTK1).sum()+ goals[k,1]
+                portfolio_strategy = portfolios_strategies[value_index]
+                probabilities = calculateTransitionPropabilities(portfolios[portfolio_strategy],Wt[i],Wt1,0,0)
+                values[k+1,i] = (probabilities * VTK1).sum()+ goals[k,1]
                 porfolios_strategies[k,i] = portfolio_strategy
+                propabilities_kc[k+1,i] = probabilities
                              
                           
-    values = np.concatenate((np.expand_dims(VTk0, axis=0),values), axis=0)
+   
     strategies = values.argmax(0)
-    return strategies, porfolio_strategies, values, propabilities_kc
+    return strategies, portfolios_strategies, values, propabilities_kc
    
 
 # REFACTOR obliczyc vector wt-kc, zamienić minusowe liczby na zero

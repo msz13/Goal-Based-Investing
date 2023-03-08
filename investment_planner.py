@@ -12,7 +12,7 @@ def WMax(t,W0, infusions, meanMax,stdMin,stdMax):
 def WMin(t, W0, infusions, goals, meanMin, stdMin, stdMax):
     valueOfInfusions = 0
     for i in range(t+1):
-        valueOfInfusions += (infusions[i]-goals[i])*np.exp((meanMin - (stdMin**2)/2)*(t-i) - (3*stdMax*np.sqrt(t-i)))
+        valueOfInfusions += (infusions[i]-goals[i,0])*np.exp((meanMin - (stdMin**2)/2)*(t-i) - (3*stdMax*np.sqrt(t-i)))
 
     return W0*np.e**((meanMin-stdMax**2/2)*t - 3*stdMax*np.sqrt(t)) + valueOfInfusions
 
@@ -58,8 +58,6 @@ def calculateValuesForLastPeriod(W: np.array, k: np.array):
         values[i] = np.where(W >= k[i,0], k[i,1], 0 )
     return np.amax(values, axis=0)
 
-def calculateValues(W: np.array, k: np.array):
-    return
 
 
 def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, WT: np.array, WT1: np.array, infusions, costs, h=1):
@@ -113,7 +111,8 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios):
                           
    
     strategies = values.argmax(0)
-    return strategies, portfolios_strategies, values, propabilities_kc
+    chosen_propabilities = np.take_along_axis(propabilities_kc,np.expand_dims(strategies,axis=(0,1)),1)
+    return strategies, portfolios_strategies, values.max(0), np.squeeze(chosen_propabilities)
    
 
 # REFACTOR obliczyc vector wt-kc, zamienić minusowe liczby na zero
@@ -155,17 +154,18 @@ class InvestmentPlanner:
         infusions[0] = 0    
         self.grid = generateGrid(W0, T, self.iMax, infusions, goals[:,0], portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
 
-        self._strategies = np.zeros((T,self.iMax))
+        self._portfolio_strategies = np.zeros((T,self.iMax))
+        self._goal_strategies = np.zeros((T,self.iMax))
         V = np.zeros((T,self.iMax))
-        self.probabilitiesT = np.zeros((T,self.iMax,self.iMax))
+        V[-1] = calculateValuesForLastPeriod(self.grid[-1],goals[-1])
+        self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
        
         for t in range(T-2,0,-1):
-            transition_probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,self.grid[t],self.grid[t+1], infusions[t], 0)
-            porfolios_ids, VT_max_k0, k0_probabilities = get_portfolios_strategies(V[t+1],transition_probabilities)
-            goal_ids, VT_max = get_goals_strategies(goals,self.grid[t], VT_max_k0)
-            V[t] = VT_max  
-            self._strategies[t] = porfolios_ids  
-            self.probabilitiesT[t] = k0_probabilities[:,0,:]
+            goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusion, self.grid[t-1], self.grid[t], V[t+1], portfolios)
+            V[t] = values 
+            self._portfolio_strategies[t] = portfolio_strategies  
+            #self.probabilitiesT[t] = probabilities
+            self._goal_strategies[t] = goal_strategies
 
         self._calculate_cumulative_propabilities(T, self.probabilitiesT)
     
@@ -182,7 +182,7 @@ class InvestmentPlanner:
         
     @property    
     def glide_paths(self):
-        return self._strategies.T
+        return self._portfolio_strategies.T
     
    
 

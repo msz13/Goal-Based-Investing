@@ -47,6 +47,30 @@ def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, i
     p = norm.pdf((np.log(W1/(W0+infusions-costs))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
     return p/p.sum()
 
+def calculateTransitionPropabilitiesForGoals(Wt, Wt1, infusion, h, goal_costs, portfolioMeasures):
+    i0 = len(Wt)
+    i1 = len(Wt1)    
+    k = len(goal_costs)
+    cf = goal_costs - infusion
+    mean = portfolioMeasures[0]
+    std = portfolioMeasures[1]
+    b = ((mean-0.5*std**2)*h)/(std*np.sqrt(h))
+    result = np.zeros((k*i0,i1))
+    
+    Wtc = np.tile(Wt,(k,1)) - cf.reshape((k,1))
+    Wtc = Wtc.reshape((k*i0,1))
+    Wt1k = np.tile(Wt1, (k*i0,1))
+    
+    np.divide(Wt1k, Wtc, out=result, where=Wtc>0)
+    np.log(result,out=result, where=result>0)
+    result = np.where(result > 0, result+ b, 0)
+    result = np.where(result > 0, norm.pdf(result), 0)
+
+    result = np.divide(result,np.expand_dims(result.sum(1), axis=1),where=result>0)
+    result = result.reshape(k,i0,i1)
+
+    return result
+
 
 def reachedGoal(W, goal=160):
     reachedGoal = W >= goal
@@ -92,27 +116,29 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios):
     porfolios_strategies = np.zeros((k, i))
     propabilities_kc = np.zeros((k+1, i, len(Wt1)))
     values = np.zeros((k+1, i)) 
-    Wtc = - np.tile(Wt,(k,1)) - np.repeat(goals[:,0],i).reshape((k,i))
-    Wtc[Wtc < 0] = 0
+    #Wtc = np.tile(Wt,(k,1)) - np.repeat(goals[:,0],i).reshape((k,i))
+    #Wtc[Wtc < 0] = 0
     
     values[0] = VTk0
     propabilities_kc[0] = chosen_propabilities[:,0,:]
     
-    for k in range(k):
+    ''' for k in range(k):
         for i in range(i):
-            if Wt[i] > goals[k][0]:
-                value_index = __get_value_index(Wt, Wtc[k,i])
-                portfolio_strategy = portfolios_strategies[value_index]
-                probabilities = calculateTransitionPropabilities(portfolios[portfolio_strategy],Wt[i],Wt1,0,0)
-                values[k+1,i] = (probabilities * VTK1).sum()+ goals[k,1]
-                porfolios_strategies[k,i] = portfolio_strategy
-                propabilities_kc[k+1,i] = probabilities
+            value_index = __get_value_index(Wt, Wtc[k,i])
+            portfolio_strategy = portfolios_strategies[value_index]
+            probabilities = calculateTransitionPropabilities(portfolios[portfolio_strategy],Wtc[k,i],Wt1,infusion,0)
+            values[k+1,i] = (probabilities * VTK1).sum()+ goals[k,1]
+            porfolios_strategies[k,i] = portfolio_strategy
+            propabilities_kc[k+1,i] = probabilities '''
+    propabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wt,Wt1,infusion,1,goals[:,0],portfolios[2])
+
                              
                           
    
     strategies = values.argmax(0)
-    chosen_propabilities = np.take_along_axis(propabilities_kc,np.expand_dims(strategies,axis=(0,1)),1)
-    return strategies, portfolios_strategies, values.max(0), np.squeeze(chosen_propabilities)
+    chosen_goal_propabilities = np.take_along_axis(propabilities_kc,np.expand_dims(strategies,axis=(0,1)),1)
+    return strategies, portfolios_strategies, values.max(0), propabilities_kc #np.squeeze(chosen_goal_propabilities)
+    
    
 
 # REFACTOR obliczyc vector wt-kc, zamienić minusowe liczby na zero
@@ -164,7 +190,7 @@ class InvestmentPlanner:
             goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusion, self.grid[t-1], self.grid[t], V[t+1], portfolios)
             V[t] = values 
             self._portfolio_strategies[t] = portfolio_strategies  
-            #self.probabilitiesT[t] = probabilities
+            self.probabilitiesT[t] = probabilities
             self._goal_strategies[t] = goal_strategies
 
         self._calculate_cumulative_propabilities(T, self.probabilitiesT)

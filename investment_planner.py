@@ -101,8 +101,13 @@ def get_portfolios_strategies(VT1, propabilities):
     return portfolios_ids, maxes, chosen_propabilities
 
 def __get_value_index(WT, wealth_value):
-    difference = np.absolute(WT - wealth_value)
-    index = np.argmin(difference)
+    k = wealth_value.shape[0]
+    i = wealth_value.shape[1]
+    wc = wealth_value.reshape(k*i,1)
+    wg = np.tile(WT,(k*i,1))
+    difference = np.absolute(wg - wc)
+    index = np.argmin(difference, axis=1)
+    index = index.reshape(k,i)
     return index
 
 
@@ -131,13 +136,12 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios):
             porfolios_strategies[k,i] = portfolio_strategy
             propabilities_kc[k+1,i] = probabilities '''
     propabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wt,Wt1,infusion,1,goals[:,0],portfolios[2])
-
-                             
-                          
-   
+    values[1:] = (propabilities_kc[1:] * VTK1).sum(2)
+                           
+                         
     strategies = values.argmax(0)
     chosen_goal_propabilities = np.take_along_axis(propabilities_kc,np.expand_dims(strategies,axis=(0,1)),1)
-    return strategies, portfolios_strategies, values.max(0), propabilities_kc #np.squeeze(chosen_goal_propabilities)
+    return strategies, portfolios_strategies, values, propabilities_kc #np.squeeze(chosen_goal_propabilities)
     
    
 

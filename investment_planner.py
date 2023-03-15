@@ -84,12 +84,18 @@ def calculateValuesForLastPeriod(W: np.array, k: np.array):
 
 
 
-def calculateTransitionPropabilitiesForAllPorfolios(portfolioMeasures, WT: np.array, WT1: np.array, infusions, costs, h=1):
-    i = len(WT1)
-    probabilities = np.zeros((i,len(portfolioMeasures),i),np.float64)
-    for i in range(i):
-        probabilities[i] = np.apply_along_axis(calculateTransitionPropabilities,1,portfolioMeasures, W0=WT[i], W1=WT1, infusions=infusions, costs=costs, h=1)
-    return probabilities
+def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions, h=1):
+    l = len(portfolios)
+    i = len(WT)
+    b = (portfolios[:,0]-0.5*portfolios[:,1]**2)*h
+    bi = np.repeat(b, i).reshape(l*i,1)
+    c = portfolios[:,1]*np.sqrt(h)
+    ci = np.repeat(c, i).reshape(l*i,1)
+   
+    Wt1 = np.tile(WT1, (l*i,1))
+    Wt = np.tile(WT,(l,1)).reshape(i*l,1)+infusions
+    result = norm.pdf((np.log(Wt1/Wt)- bi)/ci).reshape(l,i,len(WT1))
+    return result/result.sum(2).reshape(l,i,1)
 
 
 def get_portfolios_strategies(VT1, propabilities):

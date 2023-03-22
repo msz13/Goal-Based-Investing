@@ -53,14 +53,16 @@ def __calculateWtc(WT, goals_costs, infusion):
     Wtc = np.tile(WT,(k,1)) - cf.reshape((k,1))
     return Wtc
 
-def calculateTransitionPropabilitiesForGoals(WTc, Wt1, h, portfolioMeasures):
+def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     i0 = WTc.shape[1]
     i1 = len(Wt1)    
     k = WTc.shape[0]
-    
-    mean = portfolioMeasures[0]
-    std = portfolioMeasures[1]
-    b = ((mean-0.5*std**2)*h)/(std*np.sqrt(h))
+
+    portfolios_measures = portfolios_wtc.reshape(k*i0,2)  
+    b = (portfolios_measures[:,0]-0.5*(portfolios_measures[:,1]**2))*h
+    b = b.reshape(k*i0,1)
+    c = portfolios_measures[:,1]*np.sqrt(h)
+    c = c.reshape(k*i0,1)
     result = np.zeros((k*i0,i1))
 
     Wtc = WTc.reshape((k*i0,1))
@@ -68,11 +70,11 @@ def calculateTransitionPropabilitiesForGoals(WTc, Wt1, h, portfolioMeasures):
     
     np.divide(Wt1k, Wtc, out=result, where=Wtc>0)
     np.log(result,out=result, where=result>0)
-    result = np.where(result > 0, result+ b, 0)
-    result = np.where(result > 0, norm.pdf(result), 0)
-
+    result = np.where(result > 0, (result - b)/c, 0)
+    result = norm.pdf(result)
     result = np.divide(result,np.expand_dims(result.sum(1), axis=1),where=result>0)
     result = result.reshape(k,i0,i1) 
+    
     return result
 
 
@@ -153,7 +155,7 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
     goal_porfolio_strategies = __get_porfolios_strategy_for_wealth_values(Wt,)
     portfolios_measures = np.take(portfolios, goal_porfolio_strategies, axis=0)
     
-    probabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wtc,Wt1,1,goals[:,0],portfolios[2])
+    probabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wtc, Wt1,1, goals[:,0], portfolios_measures)
     values[1:] = (probabilities_kc[1:] * VTK1).sum(2)
 
     #portfolios_strategies = __get_porfolio_strategy_for_wealth_values(Wt,Wtc)                       

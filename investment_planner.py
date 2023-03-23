@@ -110,7 +110,8 @@ def get_portfolios_strategies(VT1, probabilities):
     sums = Vt.sum(2)
     maxes = np.amax(sums,0)
     portfolios_ids = np.argmax(sums,0)    
-    chosen_propabilities = np.take_along_axis(probabilities.transpose(1,0,2),portfolios_ids.reshape(6,1,1),1).squeeze(1)
+    chosen_propabilities = np.take_along_axis(probabilities.transpose(1,0,2),portfolios_ids.reshape(len(VT1),1,1),1).squeeze(1)
+
     return portfolios_ids, maxes, chosen_propabilities
 
 def __get_porfolios_strategy_for_wealth_values(WT, Wtc, porfolios_strategies):
@@ -139,30 +140,21 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
     values = np.zeros((k+1, i)) 
       
     values[0] = VTk0
-    probabilities_kc[0] = chosen_propabilities
-    
-    ''' for k in range(k):
-        for i in range(i):
-            value_index = __get_value_index(Wt, Wtc[k,i])
-            portfolio_strategy = portfolios_strategies[value_index]
-            probabilities = calculateTransitionPropabilities(portfolios[portfolio_strategy],Wtc[k,i],Wt1,infusion,0)
-            values[k+1,i] = (probabilities * VTK1).sum()+ goals[k,1]
-            porfolios_strategies[k,i] = portfolio_strategy
-            propabilities_kc[k+1,i] = probabilities '''
+    probabilities_kc[0] = chosen_propabilities    
     
     Wtc = __calculateWtc(Wt,goals[:,0],infusion)
 
-    goal_porfolio_strategies = __get_porfolios_strategy_for_wealth_values(Wt,)
+    goal_porfolio_strategies = __get_porfolios_strategy_for_wealth_values(Wt,Wtc,portfolios_strategies)
     portfolios_measures = np.take(portfolios, goal_porfolio_strategies, axis=0)
     
-    probabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wtc, Wt1,1, goals[:,0], portfolios_measures)
-    values[1:] = (probabilities_kc[1:] * VTK1).sum(2)
-
-    #portfolios_strategies = __get_porfolio_strategy_for_wealth_values(Wt,Wtc)                       
+    probabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wtc, Wt1, portfolios_measures)
+    values[1:] = (probabilities_kc[1:] * VTK1).sum(2)+ np.expand_dims(goals[:,1],1)                         
                         
     strategies = values.argmax(0)
     chosen_goal_propabilities = np.take_along_axis(probabilities_kc,np.expand_dims(strategies,axis=(0,1)),1)
-    return strategies, portfolios_strategies, values,  probabilities_kc #np.squeeze(chosen_goal_propabilities)
+    #chosen_values = #np.take_along_axis(values, np.expand_dims(strategies, axis=1), axis=0)
+
+    return strategies, portfolios_strategies, values.max(0), np.squeeze(chosen_goal_propabilities)
     
    
 
@@ -218,7 +210,7 @@ class InvestmentPlanner:
             self.probabilitiesT[t] = probabilities
             self._goal_strategies[t] = goal_strategies
 
-        self._calculate_cumulative_propabilities(T, self.probabilitiesT)
+        #self._calculate_cumulative_propabilities(T, self.probabilitiesT)
     
     def _calculate_cumulative_propabilities(self, T, probabilitiesT):
         inputPropabilities = probabilitiesT

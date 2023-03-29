@@ -9,10 +9,10 @@ def WMax(t,W0, infusions, meanMax,stdMin,stdMax):
                                                            
     return W0*np.exp((meanMax-(stdMin**2/2))*t + 3*stdMax*np.sqrt(t)) + valueOfInfusions
 
-def WMin(t, W0, infusions, goals, meanMin, stdMin, stdMax):
+def WMin(t, W0, infusions, goal, meanMin, stdMin, stdMax):
     valueOfInfusions = 0
     for i in range(t+1):
-        valueOfInfusions += (infusions[i]-goals[i,0])*np.exp((meanMin - (stdMin**2)/2)*(t-i) - (3*stdMax*np.sqrt(t-i)))
+        valueOfInfusions += (infusions[i]-goal)*np.exp((meanMin - (stdMin**2)/2)*(t-i) - (3*stdMax*np.sqrt(t-i)))
 
     return W0*np.e**((meanMin-stdMax**2/2)*t - 3*stdMax*np.sqrt(t)) + valueOfInfusions
 
@@ -26,13 +26,14 @@ def generateGrid(W0, T, iMax, infusions, goals, minMean, minStd, maxMean, maxStd
     grid = np.zeros((T,iMax))
     logW0 = np.log(W0)
     Wmin = 1
-    for t in range(1,T+1):
-        wMin = WMin(t,W0,infusions,goals, minMean,minStd,maxStd)
-        wMin = Wmin if wMin < Wmin else wMin
-        wMax = WMax(t,W0, infusions, maxMean,minStd, maxStd)
+    for t in range(0,T):
+        cmax = goals[t][:,0].max() if (len(goals[t]) >1) else 0 
+        wMin = WMin(t+1,W0,infusions,cmax, minMean,minStd,maxStd)
+        wMin = Wmin if np.all(wMin < Wmin) else wMin
+        wMax = WMax(t+1,W0, infusions, maxMean,minStd, maxStd)
         row = np.linspace(np.log(wMin),np.log(wMax),iMax)
         row = deductE(row,logW0)
-        grid[t-1] = row
+        grid[t] = row
     return np.exp(grid)
 
 def __prob2(W0, W1, mean, std, h):
@@ -57,6 +58,7 @@ def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     i0 = WTc.shape[1]
     i1 = len(Wt1)    
     k = WTc.shape[0]
+    print('i0: ', i0)
 
     portfolios_measures = portfolios_wtc.reshape(k*i0,2)  
     b = (portfolios_measures[:,0]-0.5*(portfolios_measures[:,1]**2))*h
@@ -101,7 +103,7 @@ def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions,
     Wt1 = np.tile(WT1, (l*i,1))
     Wt = np.tile(WT,(l,1)).reshape(i*l,1)+infusions
     result = norm.pdf((np.log(Wt1/Wt)- bi)/ci).reshape(l,i,len(WT1))
-    return result/result.sum(2).reshape(l,i,1)
+    return np.divide(result, result.sum(), where=result.sum()>0) #result/result.sum(2).reshape(l,i,1)
 
 
 
@@ -129,31 +131,33 @@ Wt: wealth in time t
 Wt1: wealth in time t1
 '''
 
-def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
+def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1): 
     k = len(goals)
     i = len(Wt)
-    
+           
     probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,Wt,Wt1,infusion,1)
     portfolios_strategies, VTk0, chosen_propabilities = get_portfolios_strategies(VTK1,probabilities)
     
-    probabilities_kc = np.zeros((k+1, i, len(Wt1)))
-    values = np.zeros((k+1, i)) 
+    if(goals.shape[0] <= 1):
+        return np.zeros(i), portfolios_strategies, VTk0, chosen_propabilities
+
+    probabilities_kc = np.zeros((k, i, len(Wt1)))
+    values = np.zeros((k, i)) 
       
     values[0] = VTk0
     probabilities_kc[0] = chosen_propabilities    
     
-    Wtc = __calculateWtc(Wt,goals[:,0],infusion)
+    Wtc = __calculateWtc(Wt,goals[1:,0],infusion)
 
     goal_porfolio_strategies = __get_porfolios_strategy_for_wealth_values(Wt,Wtc,portfolios_strategies)
     portfolios_measures = np.take(portfolios, goal_porfolio_strategies, axis=0)
     
     probabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wtc, Wt1, portfolios_measures)
-    values[1:] = (probabilities_kc[1:] * VTK1).sum(2)+ np.expand_dims(goals[:,1],1)                         
+    values[1:] = (probabilities_kc[1:] * VTK1).sum(2)+ np.expand_dims(goals[1:,1],1)                         
                         
     strategies = values.argmax(0)
     chosen_goal_propabilities = np.take_along_axis(probabilities_kc,np.expand_dims(strategies,axis=(0,1)),1)
-    #chosen_values = #np.take_along_axis(values, np.expand_dims(strategies, axis=1), axis=0)
-
+    
     return strategies, portfolios_strategies, values.max(0), np.squeeze(chosen_goal_propabilities)
     
    
@@ -195,7 +199,7 @@ class InvestmentPlanner:
         self.iMax = 500
         infusions = np.full(T+1,infusion)   
         infusions[0] = 0    
-        self.grid = generateGrid(W0, T, self.iMax, infusions, goals[:,0], portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
+        self.grid = generateGrid(W0, T, self.iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
 
         self._portfolio_strategies = np.zeros((T,self.iMax))
         self._goal_strategies = np.zeros((T,self.iMax))
@@ -206,11 +210,13 @@ class InvestmentPlanner:
         for t in range(T-2,0,-1):
             goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusion, self.grid[t-1], self.grid[t], V[t+1], portfolios)
             V[t] = values 
-            self._portfolio_strategies[t] = portfolio_strategies  
-            self.probabilitiesT[t] = probabilities
+            self._portfolio_strategies[t] = portfolio_strategies
+            print(self.grid[t].shape) 
+            #print(self.grid[t-1].shape)              
+            #self.probabilitiesT[t] = probabilities            
             self._goal_strategies[t] = goal_strategies
-
-        #self._calculate_cumulative_propabilities(T, self.probabilitiesT)
+                        
+        self._calculate_cumulative_propabilities(T, self.probabilitiesT)
     
     def _calculate_cumulative_propabilities(self, T, probabilitiesT):
         inputPropabilities = probabilitiesT
@@ -226,6 +232,20 @@ class InvestmentPlanner:
     @property    
     def glide_paths(self):
         return self._portfolio_strategies.T
+    
+'''  def goal_probabilities(self):
+        T = self.propabilities.shape[0]
+
+        for t in range(0,T):
+            goals = np.unique(self.goal_strategies[goal_strategies > 0])
+        result = np.zeros(len(goals))
+        for k in goals:
+        k_index = np.where(goal_strategies == k)
+        result[k-1]  = np.take(probabilites, k_index).sum()       
+    
+    return result '''
+
+    
     
    
 

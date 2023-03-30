@@ -11,7 +11,7 @@ def WMax(t,W0, infusions, meanMax,stdMin,stdMax):
 
 def WMin(t, W0, infusions, goal, meanMin, stdMin, stdMax):
     valueOfInfusions = 0
-    for i in range(t+1):
+    for i in range(t):
         valueOfInfusions += (infusions[i]-goal)*np.exp((meanMin - (stdMin**2)/2)*(t-i) - (3*stdMax*np.sqrt(t-i)))
 
     return W0*np.e**((meanMin-stdMax**2/2)*t - 3*stdMax*np.sqrt(t)) + valueOfInfusions
@@ -23,14 +23,15 @@ def deductE(row, logW0):
     return row - e
 
 def generateGrid(W0, T, iMax, infusions, goals, minMean, minStd, maxMean, maxStd) ->np.array:
-    grid = np.zeros((T,iMax))
+    grid = np.zeros((T+1,iMax))
     logW0 = np.log(W0)
+    grid[0,:] = logW0
     Wmin = 1
-    for t in range(0,T):
-        cmax = goals[t][:,0].max() if (len(goals[t]) >1) else 0 
-        wMin = WMin(t+1,W0,infusions,cmax, minMean,minStd,maxStd)
+    for t in range(1,T+1):
+        cmax = goals[t-1][:,0].max() if (len(goals[t]) >1) else 0 
+        wMin = WMin(t,W0,infusions,cmax, minMean,minStd,maxStd)
         wMin = Wmin if np.all(wMin < Wmin) else wMin
-        wMax = WMax(t+1,W0, infusions, maxMean,minStd, maxStd)
+        wMax = WMax(t,W0, infusions, maxMean,minStd, maxStd)
         row = np.linspace(np.log(wMin),np.log(wMax),iMax)
         row = deductE(row,logW0)
         grid[t] = row
@@ -58,8 +59,7 @@ def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     i0 = WTc.shape[1]
     i1 = len(Wt1)    
     k = WTc.shape[0]
-    print('i0: ', i0)
-
+    
     portfolios_measures = portfolios_wtc.reshape(k*i0,2)  
     b = (portfolios_measures[:,0]-0.5*(portfolios_measures[:,1]**2))*h
     b = b.reshape(k*i0,1)
@@ -198,8 +198,8 @@ class InvestmentPlanner:
     def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: np.array, portfolios: np.ndarray):
         self.iMax = 500
         infusions = np.full(T+1,infusion)   
-        infusions[0] = 0    
-        self.grid = generateGrid(W0, T, self.iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1] )
+         
+        self.grid = generateGrid(W0, T, self.iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
 
         self._portfolio_strategies = np.zeros((T,self.iMax))
         self._goal_strategies = np.zeros((T,self.iMax))
@@ -207,16 +207,19 @@ class InvestmentPlanner:
         V[-1] = calculateValuesForLastPeriod(self.grid[-1],goals[-1])
         self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
        
-        for t in range(T-2,0,-1):
-            goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusion, self.grid[t-1], self.grid[t], V[t+1], portfolios)
-            V[t] = values 
-            self._portfolio_strategies[t] = portfolio_strategies
-            print(self.grid[t].shape) 
+        for t in range(T-1,-1,-1):
+            #goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusions[t], self.grid[t], self.grid[t+1], V[t+1], portfolios)
+            goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusions[1], self.grid[1], self.grid[1+1], V[1+1], portfolios)
+            print(t)
+            print(probabilities.shape)
+            #V[t] = values 
+            #self._portfolio_strategies[t] = portfolio_strategies
+            #print(self.grid[t].shape) 
             #print(self.grid[t-1].shape)              
             #self.probabilitiesT[t] = probabilities            
-            self._goal_strategies[t] = goal_strategies
+            #self._goal_strategies[t] = goal_strategies
                         
-        self._calculate_cumulative_propabilities(T, self.probabilitiesT)
+        #self._calculate_cumulative_propabilities(T, self.probabilitiesT)
     
     def _calculate_cumulative_propabilities(self, T, probabilitiesT):
         inputPropabilities = probabilitiesT

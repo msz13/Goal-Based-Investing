@@ -1,5 +1,5 @@
 import pytest
-from investment_planner import calculateTransitionPropabilitiesForAllPorfolios, calculateValuesForLastPeriod, get_portfolios_strategies
+from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValuesForLastPeriod, get_portfolios_strategies
 import numpy.testing as npt
 import numpy as np
 from scipy.stats import norm
@@ -67,7 +67,30 @@ def test_should_get_porfolios_strategies():
     npt.assert_array_equal(portfolios_strategies, np.array([2,2,0,0]))
     npt.assert_array_almost_equal(values, np.array([35.8, 44.9, 87.8, 98.3]),3)
     npt.assert_array_equal(chosen_probabilities, expected_propabilities)
-    
+
+def test_should_calculate_for_single_goal():
+
+    portfolios = np.array([[0.05258386, 0.03704926],
+       [0.05515672, 0.03960988],
+       [0.05772681, 0.04625568],
+       [0.06029967, 0.05555016],
+       [0.06286483, 0.06637403],
+       [0.06545148, 0.07813246],
+       [0.06801664, 0.09041086],
+       [0.07059443, 0.103057  ],
+       [0.07315959, 0.11592848],
+       [0.07573245, 0.12898073],
+       [0.07830254, 0.14213997],
+       [0.0808754 , 0.15540374],
+       [0.08344549, 0.16872224],
+       [0.08601835, 0.18210899],
+       [0.08858351, 0.19552512]])
+
+    empty_goal = np.array([[0,0]])
+    goals = np.array([empty_goal,empty_goal, np.array([[0,0],[150,50]])])
+
+    planner = InvestmentPlanner()
+    planner.set_params(2,100,5,1,goals, portfolios)
 
 
 def convert_goals_to_k(goals):

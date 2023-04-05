@@ -202,7 +202,7 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
 class InvestmentPlanner:
        
     def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: np.array, portfolios: np.ndarray):
-        self.iMax = 20
+        self.iMax = 100        
         infusions = np.full(T+1,infusion)   
          
         self.grid = generateGrid(W0, T, self.iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])

@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.stats import norm
 import pandas as pd
+from numba import jit
 
 def WMax(t,W0, infusions, meanMax,stdMin,stdMax):
     valueOfInfusions = 0
@@ -28,7 +29,7 @@ def generateGrid(W0, T, iMax, infusions, goals, minMean, minStd, maxMean, maxStd
     grid[0,:] = logW0
     Wmin = 1
     for t in range(1,T+1):
-        cmax = goals[t-1][:,0].max() if (len(goals[t-1]) >1) else 0 
+        cmax = goals.get(t)[:,0].max() if (goals.get(t) is not None) else 0 
         wMin = WMin(t,W0,infusions,cmax, minMean,minStd,maxStd)
         wMin = Wmin if np.all(wMin < Wmin) else wMin
         wMax = WMax(t,W0, infusions, maxMean,minStd, maxStd)
@@ -43,6 +44,14 @@ def __prob2(W0, W1, mean, std, h):
 def __prob(W0, W1, mean, std, Infusion, Cost, h):
     return norm.pdf((np.log(W1/(W0+Infusion+Cost))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
 
+def convert_goals_to_k(goals):
+    result = {}
+
+    for goal in goals:
+        result[goal['time']] = np.array([[goal['cost'], goal['utility']]]) 
+
+    return result
+
 def calculateTransitionPropabilities(portfolioMeasures, W0: int, W1: np.array, infusions, costs, h=1):
     mean = portfolioMeasures[0]
     std = portfolioMeasures[1]
@@ -55,6 +64,7 @@ def __calculateWtc(WT, goals_costs, infusion):
     Wtc = np.tile(WT,(k,1)) - cf.reshape((k,1))
     return Wtc
 
+@jit(nopython=True)
 def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     i0 = WTc.shape[1]
     i1 = len(Wt1)    
@@ -108,16 +118,16 @@ def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions,
     return np.divide(result, np.expand_dims(result.sum(2), axis=2), where=result.sum()>0) 
 
 
-
 def get_portfolios_strategies(VT1, probabilities):
     Vt = VT1 * probabilities
-    sums = Vt.sum(2)
+    sums = np.round(Vt.sum(2),4)
     maxes = np.amax(sums,0)
     portfolios_ids = np.argmax(sums,0)    
     chosen_propabilities = np.take_along_axis(probabilities.transpose(1,0,2),portfolios_ids.reshape(len(VT1),1,1),1).squeeze(1)
 
     return portfolios_ids, maxes, chosen_propabilities
 
+@jit(nopython=True)
 def __get_porfolios_strategy_for_wealth_values(WT, Wtc, porfolios_strategies):
     k = Wtc.shape[0]
     i = Wtc.shape[1]
@@ -132,17 +142,17 @@ def __get_porfolios_strategy_for_wealth_values(WT, Wtc, porfolios_strategies):
 Wt: wealth in time t
 Wt1: wealth in time t1
 '''
-
+#@jit(nopython=True)
 def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1): 
-    k = len(goals)
     i = len(Wt)
            
     probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,Wt,Wt1,infusion,1)
     portfolios_strategies, VTk0, chosen_propabilities = get_portfolios_strategies(VTK1,probabilities)
     
-    if(goals.shape[0] <= 1):
+    if(goals is None):
         return np.zeros(i), portfolios_strategies, VTk0, chosen_propabilities
-
+    
+    k = len(goals)
     probabilities_kc = np.zeros((k, i, len(Wt1)))
     values = np.zeros((k, i)) 
       
@@ -198,42 +208,41 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
     return strategies, grid '''
 
 
-
 class InvestmentPlanner:
-       
-    def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: np.array, portfolios: np.ndarray):
-        self.iMax = 100        
+        
+    def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: dict, portfolios: np.ndarray):
+        self.iMax = T*10        
         infusions = np.full(T+1,infusion)   
+        k_dict = convert_goals_to_k(goals)
          
-        self.grid = generateGrid(W0, T, self.iMax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
+        self.grid = generateGrid(W0, T, self.iMax, infusions, k_dict, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
 
         self._portfolio_strategies = np.zeros((T,self.iMax))
         self._goal_strategies = np.zeros((T+1,self.iMax))
         self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
 
-        V = np.zeros((T+1,self.iMax))
-        V[-1], goal_strategies_last_period = calculateValuesForLastPeriod(self.grid[-1],goals[-1])
+        self.V = np.zeros((T+1,self.iMax))
+        self.V[-1], goal_strategies_last_period = calculateValuesForLastPeriod(self.grid[-1],k_dict.get(T))
         self._goal_strategies[-1] = goal_strategies_last_period
         
        
         for t in range(T-1,-1,-1):
-            goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(goals[t], infusions[t], self.grid[t], self.grid[t+1], V[t+1], portfolios)
-            V[t] = values 
+            goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(k_dict.get(t), infusions[t], self.grid[t], self.grid[t+1], self.V[t+1], portfolios)
+            self.V[t] = values 
             self._portfolio_strategies[t] = portfolio_strategies                    
             self.probabilitiesT[t] = probabilities            
             self._goal_strategies[t] = goal_strategies
                         
-        #self._calculate_cumulative_propabilities(T, self.probabilitiesT)
+        self.cum_propabilities =  self._calculate_cumulative_propabilities(T, self.probabilitiesT)
     
     def _calculate_cumulative_propabilities(self, T, probabilitiesT):
-        inputPropabilities = probabilitiesT
-        sums = inputPropabilities.sum(1)
-        cumulativeProbabilities = np.ones((T,self.iMax))
-        cumulativeProbabilities[0] = sums[1]
-        T=8
-        for t in range(2,T):
-            cumulativeProbabilities[t-1] = cumulativeProbabilities[t-2]*sums[t]
-        self.propabilities = cumulativeProbabilities
+        i = probabilitiesT[0].shape[1]
+        cumulativeProbabilities = np.zeros((T, probabilitiesT[0].shape[1]))
+        cumulativeProbabilities[0,:] = 1
+        for t in range(1, T):
+                for it in range(0,i):                      
+                        cumulativeProbabilities[t,it] = np.sum(probabilitiesT[t-1,:,it]*cumulativeProbabilities[t-1,it])
+        return cumulativeProbabilities
          
         
     @property    

@@ -24,7 +24,7 @@ def deductE(row, logW0):
     return row - e
 
 def generateGrid(W0, T, iMax, infusions, goals, minMean, minStd, maxMean, maxStd) ->np.array:
-    grid = np.zeros((T+1,iMax))
+    grid = np.zeros((T+2,iMax))
     logW0 = np.log(W0)
     grid[0,:] = logW0
     Wmin = 1
@@ -64,7 +64,7 @@ def __calculateWtc(WT, goals_costs, infusion):
     Wtc = np.tile(WT,(k,1)) - cf.reshape((k,1))
     return Wtc
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     i0 = WTc.shape[1]
     i1 = len(Wt1)    
@@ -127,7 +127,7 @@ def get_portfolios_strategies(VT1, probabilities):
 
     return portfolios_ids, maxes, chosen_propabilities
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def __get_porfolios_strategy_for_wealth_values(WT, Wtc, porfolios_strategies):
     k = Wtc.shape[0]
     i = Wtc.shape[1]
@@ -143,7 +143,7 @@ Wt: wealth in time t
 Wt1: wealth in time t1
 '''
 #@jit(nopython=True)
-def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1): 
+def calculateBelman(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1): 
     i = len(Wt)
            
     probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios,Wt,Wt1,infusion,1)
@@ -159,13 +159,13 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
     values[0] = VTk0
     probabilities_kc[0] = chosen_propabilities    
     
-    Wtc = __calculateWtc(Wt,goals[1:,0],infusion)
+    Wtc = __calculateWtc(Wt,goals[0:,0],infusion)
 
     goal_porfolio_strategies = __get_porfolios_strategy_for_wealth_values(Wt,Wtc,portfolios_strategies)
     portfolios_measures = np.take(portfolios, goal_porfolio_strategies, axis=0)
     
     probabilities_kc[1:] = calculateTransitionPropabilitiesForGoals(Wtc, Wt1, portfolios_measures)
-    values[1:] = (probabilities_kc[1:] * VTK1).sum(2)+ np.expand_dims(goals[1:,1],1)                         
+    values[1:] = (probabilities_kc[1:] * VTK1).sum(2)+ np.expand_dims(goals[:,1],1)                         
                         
     strategies = values.argmax(0)
 
@@ -175,6 +175,17 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
         chosen_goal_propabilities[i,:] = probabilities_kc[strategies[i],i]
     
     return strategies, portfolios_strategies, values.max(0), np.squeeze(chosen_goal_propabilities)
+
+def _calculate_cumulative_propabilities(probabilitiesT):
+        i = probabilitiesT[0].shape[1]
+        T = probabilitiesT.shape[0]
+        cumulativeProbabilities = np.zeros((T, probabilitiesT[0].shape[1]))
+        cumulativeProbabilities[0,:] = 1
+        cumulativeProbabilities[1] = probabilitiesT[0,0]
+        for t in range(2, T):
+                for it in range(0,i):                      
+                        cumulativeProbabilities[t,it] = np.sum(probabilitiesT[t-1,:,it]*cumulativeProbabilities[t-1,it])
+        return cumulativeProbabilities
     
    
 
@@ -211,43 +222,45 @@ def get_goals_strategies(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
 class InvestmentPlanner:
         
     def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: dict, portfolios: np.ndarray):
-        self.iMax = T*10        
+        self.iMax = T*40        
+
         infusions = np.full(T+1,infusion)   
-        k_dict = convert_goals_to_k(goals)
+        self.k_dict = convert_goals_to_k(goals)
          
-        self.grid = generateGrid(W0, T, self.iMax, infusions, k_dict, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
+        self.grid = generateGrid(W0, T, self.iMax, infusions, self.k_dict, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
 
         self._portfolio_strategies = np.zeros((T,self.iMax))
         self._goal_strategies = np.zeros((T+1,self.iMax))
         self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
 
-        self.V = np.zeros((T+1,self.iMax))
-        self.V[-1], goal_strategies_last_period = calculateValuesForLastPeriod(self.grid[-1],k_dict.get(T))
-        self._goal_strategies[-1] = goal_strategies_last_period
+        self.V = np.zeros((T+2,self.iMax))
+        #self.V[-1], goal_strategies_last_period = calculateValuesForLastPeriod(self.grid[-1],self.k_dict.get(T))
+        #self._goal_strategies[-1] = goal_strategies_last_period
+        self.V[-1] = 0
         
        
         for t in range(T-1,-1,-1):
-            goal_strategies, portfolio_strategies, values, probabilities = get_goals_strategies(k_dict.get(t), infusions[t], self.grid[t], self.grid[t+1], self.V[t+1], portfolios)
+            goal_strategies, portfolio_strategies, values, probabilities = get_portfolios_strategies(self.k_dict.get(t), infusions[t], self.grid[t], self.grid[t+1], self.V[t+1], portfolios)
             self.V[t] = values 
             self._portfolio_strategies[t] = portfolio_strategies                    
             self.probabilitiesT[t] = probabilities            
             self._goal_strategies[t] = goal_strategies
                         
-        self.cum_propabilities =  self._calculate_cumulative_propabilities(T, self.probabilitiesT)
-    
-    def _calculate_cumulative_propabilities(self, T, probabilitiesT):
-        i = probabilitiesT[0].shape[1]
-        cumulativeProbabilities = np.zeros((T, probabilitiesT[0].shape[1]))
-        cumulativeProbabilities[0,:] = 1
-        for t in range(1, T):
-                for it in range(0,i):                      
-                        cumulativeProbabilities[t,it] = np.sum(probabilitiesT[t-1,:,it]*cumulativeProbabilities[t-1,it])
-        return cumulativeProbabilities
-         
+        self.cum_propabilities =  _calculate_cumulative_propabilities(self.probabilitiesT)
+             
         
     @property    
     def glide_paths(self):
         return self._portfolio_strategies.T
+    
+
+    def get_goal_propabilities(self):
+        t_goals = self.k_dict.keys()
+        goal_propabilities = np.zeros((t,1))
+        for t in t_goals:
+            goal_propabilities[t] = 1
+        return goal_propabilities
+
     
 '''  def goal_probabilities(self):
         T = self.propabilities.shape[0]

@@ -92,11 +92,39 @@ def test_goals_transformer():
     }
     npt.assert_equal(result, expected)
 
+''' 
+get_goal_strategies tests
+* none goal
+* single goal
+* multiple goals
+* zeros vt1 
+'''
 
-def test_should_return_goals_strategies_for_single_goal():
-    return
+def get_goals_strategies():
+    return 
 
-    goal_strategies, porfolios_strategies, propabilities = dynamicProgramming(goals,grid, portfolios)
+def test_should_return_goals_strategies_for_zeros_VT1():
+    VT1 = [0,0,0,0,0] 
+    
+    Wtc = np.array([[44, 45, 55, 75, 95, 100],
+                [ 5,  6, 16, 36, 56, 61],
+                [-6, -5,  5, 25, 45, 50]])
+    
+    probs = [[[0.612, 0.244, 0.095, 0.036, 0.014]
+            [0.501, 0.265, 0.135, 0.067, 0.032]
+            [0.308, 0.253, 0.195, 0.143, 0.101]
+            [ 0., 0., -0.093, 0.516, 0.484]
+            [ 0., 0., 0., -0.083, 1.],
+            [[ 0.977  0.022  0.001  0.     0.   ]
+            [ 0.907  0.084  0.008  0.001  0.   ]
+            [ 0.712  0.207  0.059  0.017  0.005]
+            [ 0.491  0.266  0.139  0.07   0.034]
+            [ 0.438  0.268  0.157  0.088  0.048]]]
+    goal = [[45,100],[95,150]]
+    
+    expectedVT = []
+
+    
     
 
             

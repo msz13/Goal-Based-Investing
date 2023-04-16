@@ -1,32 +1,9 @@
 import pytest
-from investment_planner import InvestmentPlanner, calculateTransitionPropabilitiesForAllPorfolios, calculateValuesForLastPeriod, get_portfolios_strategies, convert_goals_to_k
+from model.investment_planner import InvestmentPlanner, calculateValuesForLastPeriod, get_portfolios_strategies, convert_goals_to_k, get_goals_strategies
 import numpy.testing as npt
 import numpy as np
-from scipy.stats import norm
 
-def __prob(W0, W1, mean, std, Infusion, Cost, h):
-    return norm.pdf((np.log(W1/(W0+Infusion+Cost))-(mean-0.5*std**2)*h)/(std*np.sqrt(h)))
 
-def test_should_calculate_TransitionPropabilitiesForAllPorfolios():
-    portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
-    W0 = np.array([49,50,60,80,100,105])
-    W1 = np.array([90,95,100,103,105,110])
-    infusions = 5
-    h = 1
-
-    probabilities = calculateTransitionPropabilitiesForAllPorfolios(portfolios, W0,W1,infusions,h) 
-    expected_prob1= __prob(W0[3],W1,portfolios[0,0],portfolios[0,1],infusions, 0, h)
-    expected_prob1 = expected_prob1/expected_prob1.sum()      
-    expected_prob2= __prob(W0[3],W1,portfolios[1,0],portfolios[1,1],infusions, 0, h)
-    expected_prob2 = expected_prob2/expected_prob2.sum()
-    expected_prob3 = __prob(W0[3],W1,portfolios[2,0],portfolios[2,1],infusions, 0, h)
-    expected_prob3 = expected_prob3/expected_prob3.sum()
-    
-    assert probabilities.shape == (3, 6, 6)    
-    npt.assert_array_almost_equal(probabilities[0,3], expected_prob1,3)
-    npt.assert_array_almost_equal(probabilities[1,3], expected_prob2,3)
-    npt.assert_array_almost_equal(probabilities[2,3], expected_prob3,3)
- 
 def test_should_values_last_period():
     
     goals = np.array([[0,0,],[40, 80], [60,100], [100,180]])
@@ -100,32 +77,42 @@ get_goal_strategies tests
 * zeros vt1 
 '''
 
-def get_goals_strategies():
-    return 
 
-def test_should_return_goals_strategies_for_zeros_VT1():
-    VT1 = [0,0,0,0,0] 
-    
-    Wtc = np.array([[44, 45, 55, 75, 95, 100],
-                [ 5,  6, 16, 36, 56, 61],
-                [-6, -5,  5, 25, 45, 50]])
-    
-    probs = [[[0.612, 0.244, 0.095, 0.036, 0.014]
-            [0.501, 0.265, 0.135, 0.067, 0.032]
-            [0.308, 0.253, 0.195, 0.143, 0.101]
-            [0., 0., -0.093, 0.516, 0.484]
-            [0., 0., 0., -0.083, 1.],
-            [[ 0.977, 0.022, 0.001, 0., 0.]
-            [0.907, 0.084, 0.008, 0.001, 0.]
-            [0.712, 0.207, 0.059, 0.017, 0.005]
-            [0.491, 0.266, 0.139, 0.07, 0.034]
-            [0.438, 0.268, 0.157, 0.088, 0.048]]]
-    goal = [[45,100],[95,150]]
-    
-    expectedVT = []
+@pytest.mark.parametrize('goals_utilities,VT1,expected_V,expected_goal_strategies', 
+[([[100,150],[0,0,0,0],[0,100,150,150], [0,1,2,2]]),
+ ([[100,150],[0,0,100,150],[20,120,185,185], [0,1,1,2]])
+ ])
+def test_should_return_goals_strategies_for_zeros_VT1(goals_utilities, VT1, expected_V, expected_goal_strategies):      
+     
+    probabilities = np.array([[[0.4, 0.4, 0.2, 0],
+                           [0.4, 0.3, 0.2, 0.1],
+                           [0.2, 0.3, 0.3, 0.2],
+                           [0.1, 0.3, 0.4, 0.2]
+                           ],
+                           [[np.nan, np.nan, np.nan, np.nan],                            
+                            [0.4, 0.4, 0.2, 0],
+                            [0.1, 0.2, 0.4, 0.3],
+                            [0.1, 0.2, 0.5, 0.2]
+                           ],[
+                           [np.nan, np.nan, np.nan, np.nan],  
+                           [np.nan, np.nan, np.nan, np.nan],                         
+                            [0.4, 0.4, 0.2, 0],
+                            [0.4, 0.3, 0.2, 0.1]                            
+                           ]])      
+        
+    result_V, result_goal_strategies = get_goals_strategies(probabilities, np.array(goals_utilities), np.array(VT1))
+
+    npt.assert_equal(result_V, expected_V)
+    npt.assert_equal(result_goal_strategies, expected_goal_strategies)
 
     
-    
+def test_calculateBelman():
+
+    grid = np.array([[100, 100, 100, 100, 100, 100],
+                     [64., 80, 100, 126, 158, 200],
+                     [56., 74, 100, 137, 187, 259],
+                     [51., 70, 100, 144, 211, 311]])
+    assert 1==1
 
             
 

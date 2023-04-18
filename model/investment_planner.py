@@ -102,6 +102,22 @@ def calculateBelmanForT(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
         chosen_portfolios_strategies[i] = goal_portfolio_strategies[goal_strategies[i],i] 
     
     return goal_strategies, chosen_portfolios_strategies, values, np.squeeze(chosen_goal_propabilities)
+
+
+def calculateBelman(grid,goals, portfolios):
+    T = grid.shape[0]
+    i = grid.shape[1]
+
+    goal_strategies = np.zeros((T,i))
+    portfolios_strategies = np.zeros((T,i))
+    probabilities = np.zeros((T,i,i))
+    V = np.zeros((T,i))
+    V[-1] = 0
+
+    for t in range(T-2,-1,-1):
+        goal_strategies[t], portfolios_strategies[t], V[t], probabilities[t] = calculateBelmanForT(goals.get(t),0,grid[t], grid[t+1], V[t+1], portfolios)    
+    
+    return goal_strategies, portfolios_strategies, probabilities
    
 
 class InvestmentPlanner:
@@ -117,19 +133,8 @@ class InvestmentPlanner:
         self._portfolio_strategies = np.zeros((T,self.iMax))
         self._goal_strategies = np.zeros((T+1,self.iMax))
         self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
-
-        self.V = np.zeros((T+2,self.iMax))
-        #self.V[-1], goal_strategies_last_period = calculateValuesForLastPeriod(self.grid[-1],self.k_dict.get(T))
-        #self._goal_strategies[-1] = goal_strategies_last_period
-        self.V[-1] = 0
         
-       
-        for t in range(T-1,-1,-1):
-            goal_strategies, portfolio_strategies, values, probabilities = calculateBelmanForT(self.k_dict.get(t), infusions[t], self.grid[t], self.grid[t+1], self.V[t+1], portfolios)
-            self.V[t] = values 
-            self._portfolio_strategies[t] = portfolio_strategies                    
-            self.probabilitiesT[t] = probabilities            
-            self._goal_strategies[t] = goal_strategies
+        self._goal_strategies, self._portfolio_strategies, self.probabilitiesT = calculateBelman(self.grid, self.k_dict, portfolios)
                         
         self.cum_propabilities =  _calculate_cumulative_propabilities(self.probabilitiesT)
              

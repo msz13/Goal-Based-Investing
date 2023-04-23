@@ -2,14 +2,9 @@ import numpy as np
 from numba import jit
 from model.propabilities import calculateTransitionPropabilitiesForAllPorfolios, calculateTransitionPropabilitiesForGoals, _calculate_cumulative_propabilities
 from model.grid import generateGrid
+from model._utilities import Goals
 
-def convert_goals_to_k(goals):
-    result = {}
 
-    for goal in goals:
-        result[goal['time']] = np.array([[goal['cost'], goal['utility']]]) 
-
-    return result
 
 def __calculateWtc(WT, goals_costs, infusion):        
     k = len(goals_costs)
@@ -104,7 +99,7 @@ def calculateBelmanForT(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
     return goal_strategies, chosen_portfolios_strategies, values, np.squeeze(chosen_goal_propabilities)
 
 
-def calculateBelman(grid,goals, portfolios):
+def calculateBelman(grid,goals: Goals, portfolios):
     T = grid.shape[0]
     i = grid.shape[1]
 
@@ -115,26 +110,28 @@ def calculateBelman(grid,goals, portfolios):
     V[-1] = 0
 
     for t in range(T-2,-1,-1):
-        goal_strategies[t], portfolios_strategies[t], V[t], probabilities[t] = calculateBelmanForT(goals.get(t),0,grid[t], grid[t+1], V[t+1], portfolios)    
+        goal_strategies[t], portfolios_strategies[t], V[t], probabilities[t] = calculateBelmanForT(goals.get_k_array(t),0,grid[t], grid[t+1], V[t+1], portfolios)  
+       
     
     return goal_strategies, portfolios_strategies, probabilities
    
 
 class InvestmentPlanner:
         
-    def set_params(self, T: int, W0: float, infusion: float, infusionInterval: float, goals: dict, portfolios: np.ndarray):
-        self.iMax = T*40        
-
-        infusions = np.full(T+1,infusion)   
+    def set_params(self, W0: float, infusion: float, infusionInterval: float, goals: dict, portfolios: np.ndarray):
+                
         self.k_dict = convert_goals_to_k(goals)
-         
+        T = np.fromiter(self.k_dict.keys(), np.int32).max()
+        infusions = np.full(T+1,infusion)
+        self.iMax = T*40       
+              
         self.grid = generateGrid(W0, T, self.iMax, infusions, self.k_dict, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
 
         self._portfolio_strategies = np.zeros((T,self.iMax))
         self._goal_strategies = np.zeros((T+1,self.iMax))
         self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
         
-        self._goal_strategies, self._portfolio_strategies, self.probabilitiesT = calculateBelman(self.grid, self.k_dict, portfolios)
+        #self._goal_strategies, self._portfolio_strategies, self.probabilitiesT = calculateBelman(self.grid, self.k_dict, portfolios)
                         
         self.cum_propabilities =  _calculate_cumulative_propabilities(self.probabilitiesT)
              

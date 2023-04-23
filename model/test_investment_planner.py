@@ -1,5 +1,6 @@
 import pytest
-from model.investment_planner import InvestmentPlanner, calculateBelmanForT, calculateBelman, calculateValuesForLastPeriod, get_portfolios_strategies, convert_goals_to_k, get_goals_strategies
+from model.investment_planner import InvestmentPlanner, calculateBelmanForT, calculateBelman, calculateValuesForLastPeriod, get_portfolios_strategies, get_goals_strategies
+from model._utilities import Goals
 import numpy.testing as npt
 import numpy as np
 
@@ -47,27 +48,6 @@ def test_should_get_porfolios_strategies():
 
 
 
-def test_goals_transformer():
-
-    goals =  [{
-        "time": 5,
-        "cost": 100,
-        "utility": 1000                
-    },
-    {
-        "time": 10,
-        "cost": 60,
-        "utility": 500               
-    },
-    ]
-
-    result = convert_goals_to_k(goals)
-
-    expected = {
-        5: np.array([[100, 1000]]),
-        10: np.array([[60,500]])
-    }
-    npt.assert_equal(result, expected)
 
 ''' 
 get_goal_strategies tests
@@ -105,6 +85,18 @@ def test_should_return_goals_strategies_for_zeros_VT1(goals_utilities: list[list
     npt.assert_equal(result_V, expected_V)
     npt.assert_equal(result_goal_strategies, expected_goal_strategies)
 
+def test_shoulf_calculateBelmanForT_for_last_t():
+
+    goals = np.array([[30,100]])
+    infusion = 0
+    WT = np.array([0.68, 1.27, 2.37, 4.43, 8.26, 15.41, 28.74, 53.61, 100., 186.52])
+    WT1= np.array([37.69, 48.11, 61.4 , 78.36, 100., 127.62, 162.88, 207.87, 265.29, 338.58])
+    VTK1 = np.array([0,0,0,0,0,0,0,0,0,0])
+    portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
+    goal_strategies, chosen_portfolios_strategies, values, chosen_goal_propabilities = calculateBelmanForT(goals,infusion,WT,WT1,VTK1,portfolios)
+
+    npt.assert_array_equal(goal_strategies, np.array([0,0,0,0,0,0,0,0,0,100]))
+
     
 def test_calculateBelman():
     
@@ -114,9 +106,11 @@ def test_calculateBelman():
                      [51., 70., 100, 144, 211, 311]                     
                      ])
         
-    goals = {
-        2: np.array([[140,100]])
-    }
+    goals = goals = Goals([{        
+        "time": 2,
+        "cost": 107,
+        "utility": 100                
+    }])
 
     portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
 
@@ -125,12 +119,12 @@ def test_calculateBelman():
     expected_probabilities = np.zeros((4,6,6))
 
     values3 = np.array([0,0,0,0,00,00])
-    expected_goal_strategies[2], expected_portfolios_strategies[2], values2, expected_probabilities[2] = calculateBelmanForT(goals.get(2),0,grid[2], grid[3], values3, portfolios)
+    expected_goal_strategies[2], expected_portfolios_strategies[2], values2, expected_probabilities[2] = calculateBelmanForT(goals.get_k_array(2),0,grid[2], grid[3], values3, portfolios)
     expected_goal_strategies[1], expected_portfolios_strategies[1], values1, expected_probabilities[1] = calculateBelmanForT(None,0,grid[1], grid[2], values2, portfolios)
     expected_goal_strategies[0], expected_portfolios_strategies[0], values0, expected_probabilities[0] = calculateBelmanForT(None,0,grid[0], grid[1], values1, portfolios)
         
-    goal_strategies, portfolios_strategies, propabilities = calculateBelman(grid, goals,portfolios)
-    
+    goal_strategies, portfolios_strategies, propabilities  = calculateBelman(grid, goals,portfolios)
+  
     npt.assert_array_equal(goal_strategies, expected_goal_strategies)
     npt.assert_array_equal(portfolios_strategies, expected_portfolios_strategies)
     npt.assert_array_almost_equal(propabilities, expected_probabilities, 3)

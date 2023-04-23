@@ -85,7 +85,7 @@ def test_should_return_goals_strategies_for_zeros_VT1(goals_utilities: list[list
     npt.assert_equal(result_V, expected_V)
     npt.assert_equal(result_goal_strategies, expected_goal_strategies)
 
-def test_shoulf_calculateBelmanForT_for_last_t():
+def test_should_calculateBelmanForT_for_last_t():
 
     goals = np.array([[30,100]])
     infusion = 0

@@ -8,8 +8,8 @@ def __prob(W0, W1, mean, std, Infusion, Cost, h):
 
 def test_should_calculate_TransitionPropabilitiesForAllPorfolios():
     portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
-    W0 = np.array([49,50,60,80,100,105])
-    W1 = np.array([90,95,100,103,105,110])
+    W0 = np.array([1,49,50,60,80,100,105])
+    W1 = np.array([50,90,95,100,103,105,110])
     infusions = 5
     h = 1
 
@@ -21,7 +21,7 @@ def test_should_calculate_TransitionPropabilitiesForAllPorfolios():
     expected_prob3 = __prob(W0[3],W1,portfolios[2,0],portfolios[2,1],infusions, 0, h)
     expected_prob3 = expected_prob3/expected_prob3.sum()
     
-    assert probabilities.shape == (3, 6, 6)    
+    assert probabilities.shape == (3, 7, 7)    
     npt.assert_array_almost_equal(probabilities[0,3], expected_prob1,3)
     npt.assert_array_almost_equal(probabilities[1,3], expected_prob2,3)
     npt.assert_array_almost_equal(probabilities[2,3], expected_prob3,3)

@@ -92,7 +92,7 @@ def calculateBelmanForT(goals, infusion, Wt, Wt1, VTK1, portfolios, h=1):
     for i in range(i):
         chosen_goal_propabilities[i,:] = probabilities_kc[goal_strategies[i],i]
 
-    chosen_portfolios_strategies = np.zeros(6)
+    chosen_portfolios_strategies = np.zeros(i)
     for i in range(i):
         chosen_portfolios_strategies[i] = goal_portfolio_strategies[goal_strategies[i],i] 
     

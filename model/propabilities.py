@@ -18,11 +18,11 @@ def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions,
    
     Wt1 = np.tile(WT1, (l*i,1))
     Wt = np.tile(WT,(l,1)).reshape(i*l,1)+infusions
-    result = norm.pdf((np.log(Wt1/Wt)- bi)/ci).reshape(l,i,len(WT1))
-    #return  result.sum(2)    
-    return np.divide(result, np.expand_dims(result.sum(2), axis=2), where=result.sum()>0) 
-
-
+    propabilities = norm.pdf((np.log(Wt1/Wt)- bi)/ci).reshape(l,i,len(WT1))
+    result = np.zeros_like(propabilities)
+    sums = np.expand_dims(propabilities.sum(2), axis=2)      
+    np.divide(propabilities, sums, out=result, where=sums>0)    
+    return result
 
 
 #@jit(nopython=True)

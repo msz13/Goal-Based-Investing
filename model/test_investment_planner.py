@@ -62,7 +62,7 @@ get_goal_strategies tests
 [([[100,150],[0,0,0,0],[0,100,150,150], [0,1,2,2]]),
  ([[100,150],[0,0,100,150],[20,120,185,185], [0,1,1,2]])
  ])
-def test_should_return_goals_strategies_for_zeros_VT1(goals_utilities: list[list[int]], VT1: list[list[int]], expected_V: list[list[int]], expected_goal_strategies: list[list[int]]):      
+def test_should_return_goals_strategies(goals_utilities: list[list[int]], VT1: list[list[int]], expected_V: list[list[int]], expected_goal_strategies: list[list[int]]):      
      
     probabilities = np.array([[[0.4, 0.4, 0.2, 0],
                            [0.4, 0.3, 0.2, 0.1],
@@ -87,15 +87,18 @@ def test_should_return_goals_strategies_for_zeros_VT1(goals_utilities: list[list
 
 def test_should_calculateBelmanForT_for_last_t():
 
-    goals = np.array([[30,100]])
+    goals = np.array([[120,150]])
     infusion = 0
-    WT = np.array([0.68, 1.27, 2.37, 4.43, 8.26, 15.41, 28.74, 53.61, 100., 186.52])
-    WT1= np.array([37.69, 48.11, 61.4 , 78.36, 100., 127.62, 162.88, 207.87, 265.29, 338.58])
-    VTK1 = np.array([0,0,0,0,0,0,0,0,0,0])
+    WT = np.array([0.68, 1.27, 2.37, 4.43, 8.26, 15.41, 28.74, 53.61, 100., 141, 186.52])
+    WT1= np.array([37.69, 48.11, 61.4 , 78.36, 100., 127.62, 162.88, 207.87, 265.29, 180, 338.58])
+
+    VTK1 = np.array([0,0,0,0,0,0,0,0,0,0,0])
     portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
     goal_strategies, chosen_portfolios_strategies, values, chosen_goal_propabilities = calculateBelmanForT(goals,infusion,WT,WT1,VTK1,portfolios)
 
-    npt.assert_array_equal(goal_strategies, np.array([0,0,0,0,0,0,0,0,0,100]))
+    npt.assert_array_equal(values, np.array([0,0,0,0,0,0,0,0,0,150, 150]))
+    npt.assert_array_equal(goal_strategies, np.array([0,0,0,0,0,0,0,0,0,1, 1]))
+    #TODO reszta testow i kalkulacja dla innego t niz ostatnie
 
     
 def test_calculateBelman():

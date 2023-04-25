@@ -36,7 +36,7 @@ def get_portfolios_strategies(VT1, probabilities):
 def get_goals_strategies(propabilites, goal_utilities, VT1):
     utilities = np.vstack(([0],np.expand_dims(goal_utilities,1)))
     VT = np.sum(propabilites * VT1,axis=2) + utilities
-    result_V = np.nanmax(VT,0) #np.expand_dims(utilities,1) #VT #np.nanmax(VT,axis=0)
+    result_V = np.nanmax(VT,0) 
     result_a = np.nanargmax(VT,0)
     return result_V, result_a
 

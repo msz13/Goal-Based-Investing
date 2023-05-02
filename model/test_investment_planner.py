@@ -100,6 +100,20 @@ def test_should_calculateBelmanForT_for_last_t():
     npt.assert_array_equal(goal_strategies, np.array([0,0,0,0,0,0,0,0,0,1, 1]))
     #TODO reszta testow i kalkulacja dla innego t niz ostatnie
 
+def test_should_calculateBelmanForT():
+    
+    goals = np.array([[120,150]])
+    infusion = 0
+    WT = np.array([0.68, 1.27, 2.37, 4.43, 8.26, 15.41, 28.74, 53.61, 100., 141, 186.52])
+    WT1= np.array([37.69, 48.11, 61.4 , 78.36, 100., 127.62, 162.88, 207.87, 265.29, 180, 338.58])
+
+    VTK1 = np.array([0,0,0,0,0,0,0,0,100,100,100])
+    portfolios = np.array([[0.0526, 0.0374], [0.07059443, 0.103057  ], [0.0886, 0.1954]])
+    goal_strategies, chosen_portfolios_strategies, values, chosen_goal_propabilities = calculateBelmanForT(goals,infusion,WT,WT1,VTK1,portfolios)
+
+    npt.assert_array_almost_equal(values, np.array([0,0,0,0,0,0,0,0,0,150, 150]),2)
+    npt.assert_array_equal(goal_strategies, np.array([0,0,0,0,0,0,0,0,0,1, 1]))
+
     
 def test_calculateBelman():
     
@@ -122,9 +136,10 @@ def test_calculateBelman():
     expected_probabilities = np.zeros((4,6,6))
 
     values3 = np.array([0,0,0,0,00,00])
-    expected_goal_strategies[2], expected_portfolios_strategies[2], values2, expected_probabilities[2] = calculateBelmanForT(goals.get_k_array(2),0,grid[2], grid[3], values3, portfolios)
-    expected_goal_strategies[1], expected_portfolios_strategies[1], values1, expected_probabilities[1] = calculateBelmanForT(None,0,grid[1], grid[2], values2, portfolios)
-    expected_goal_strategies[0], expected_portfolios_strategies[0], values0, expected_probabilities[0] = calculateBelmanForT(None,0,grid[0], grid[1], values1, portfolios)
+    expected_goal_strategies2, expected_portfolios_strategies2, values2, expected_probabilities2 = calculateBelmanForT(goals.get_k_array(2),0,grid[2], grid[3], values3, portfolios)
+    #expected_goal_strategies[2], expected_portfolios_strategies[2], values2, expected_probabilities[2] = calculateBelmanForT(goals.get_k_array(2),0,grid[2], grid[3], values3, portfolios)
+    ''' expected_goal_strategies[1], expected_portfolios_strategies[1], values1, expected_probabilities[1] = calculateBelmanForT(None,0,grid[1], grid[2], values2, portfolios)
+    expected_goal_strategies[0], expected_portfolios_strategies[0], values0, expected_probabilities[0] = calculateBelmanForT(None,0,grid[0], grid[1], values1, portfolios) '''
         
     goal_strategies, portfolios_strategies, propabilities  = calculateBelman(grid, goals,portfolios)
   

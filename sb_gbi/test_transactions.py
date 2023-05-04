@@ -1,25 +1,47 @@
+from dataclasses import dataclass
 import numpy as np
 import numpy.testing as npt
+import pytest
+
+@dataclass
+class Transaction:
+    delta_shares: np.array
+    outflows: int = 0
+ 
 
 
-def transactions(inflow, assets_weights, prices):
-    return np.fix((inflow*assets_weights) / prices)
+def transactions(inflow, assets_weights, prices, goal = None):
+    delta_shares = np.fix((inflow*assets_weights) / prices)    
+    return Transaction(delta_shares, goal)
 
 
-def test_should_make_transactions():
+def test_should_buy_assets():
     assets_weights = np.array([0.6,0.4])
 
-    prices = np.array([[32.7, 51.5],[28.2, 52.00]])
-    shares = transactions(1000,assets_weights,prices)
+    prices = np.array([[30, 50],[30, 50]])
+    result = transactions(10000,assets_weights,prices)
 
-    npt.assert_array_equal(shares, np.array([[18, 7],[21, 7]]))   
+    expected_result = Transaction(np.array([[200, 80],[200, 80]]))
+
+    npt.assert_array_equal(result.delta_shares, expected_result.delta_shares)   
 
 
+test_data = [(15000, Transaction(
+        delta_shares=np.array([[-263, -100],[-286, -107]]), 
+        outflows=15000))]  
 
-def test_should_make_transactions_with_outflows():
+#@pytest.mark.parametrize('goal,expected', test_data)
+def test_should_withrow_money_for_goal():
     assets_weights = np.array([0.6,0.4])
 
-    prices = np.array([[32.7, 51.5],[28.2, 52.00]])
-    shares = transactions(-9000, assets_weights,prices)
+    prices = np.array([[34.2, 59.57],[31.42, 55.88]])
+    
+    expected = test_data[0][1]
+    goal = test_data[0][0]
 
-    npt.assert_array_equal(shares, np.array([[-165, -69],[-191,-69]])) 
+    result = transactions(-15000, assets_weights,prices, goal)
+    
+    npt.assert_array_equal(result.delta_shares, expected.delta_shares) 
+    assert result.outflows == expected.outflows
+
+

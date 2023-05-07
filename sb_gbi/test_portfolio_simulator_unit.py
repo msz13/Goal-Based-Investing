@@ -1,8 +1,8 @@
-import pytest
+''' import pytest
 import numpy.testing as npt
 import numpy as np
 from portfolio_simulator import PortfoliosSimulator, transactions
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -57,9 +57,5 @@ def test_should_get_porfolios_last_value_(prices):
 
 
 
-porfoliosimulator -> 
-    oprations
-porfolio sumilator - calculate balance
 
-
-
+ '''

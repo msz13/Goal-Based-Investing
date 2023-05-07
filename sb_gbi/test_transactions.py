@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from unittest.mock import Mock
 import numpy as np
 import numpy.testing as npt
 import pytest
@@ -9,39 +10,64 @@ class Transaction:
     outflows: int = 0
  
 
+def transactions(inflow, shares_owned, assets_weights, prices, goal = (0,0)):
+    
+    goal_target = goal[0] 
+    goal_max_outflow_percent = goal[1]
+    cashflow = inflow - goal_target
+    current_value = np.sum(shares_owned * prices, 1) 
+    max_outflow_value = current_value * goal_max_outflow_percent
+    delta_shares = np.zeros_like(shares_owned)
 
-def transactions(inflow, assets_weights, prices, goal = None):
-    delta_shares = np.fix((inflow*assets_weights) / prices)    
-    return Transaction(delta_shares, goal)
+    if(cashflow >0 ):
+        delta_shares = np.fix((cashflow*assets_weights) / prices)
+    else:
+        delta_shares = np.where(np.abs(cashflow) <= max_outflow_value, np.fix((cashflow*assets_weights) / prices), -np.fix(shares_owned * goal_max_outflow_percent))
+        
+    outflows = np.round(np.abs(np.sum(delta_shares * prices,axis=1)),2)
+    
+    return Transaction(delta_shares, outflows)
 
 
 def test_should_buy_assets():
-    assets_weights = np.array([0.6,0.4])
 
+    assets_weights = np.array([0.6,0.4])
     prices = np.array([[30, 50],[30, 50]])
-    result = transactions(10000,assets_weights,prices)
+    result = transactions(10000, np.array([[263, 100],[286, 107]]), assets_weights,prices)
 
     expected_result = Transaction(np.array([[200, 80],[200, 80]]))
 
     npt.assert_array_equal(result.delta_shares, expected_result.delta_shares)   
 
+'''
+TODO
+- multiple goals, gaol reached or not 
+'''
 
-test_data = [(15000, Transaction(
-        delta_shares=np.array([[-263, -100],[-286, -107]]), 
-        outflows=15000))]  
+ids = ['max withrowal 100, goal reached',
+       'max withrowal 100, goal not reached', 
+       'max withrowal less than 100, goal reached',
+       'max withrowal less than 100, goal not reached']
 
-#@pytest.mark.parametrize('goal,expected', test_data)
-def test_should_withrow_money_for_goal():
+test_data = [((15000,1), [[-263, -100],[-286, -107]], [14951.60, 14965.28]),
+             ((16500,1), [[-285, -107],[-292, -109]], [16120.99, 15265.56]),
+             ((12000,0.8), [[-210, -80],[-229, -85]], [11947.60, 11944.98]),
+             ((13000,0.8), [[-228, -85],[-233, -87]], [12861.05, 12182.42]),]
+
+
+@pytest.mark.parametrize('goal,expected_delta_shares,expected_outflows', test_data, ids=ids)
+def test_should_withrow_money_for_goal(goal, expected_delta_shares,expected_outflows):
+    
     assets_weights = np.array([0.6,0.4])
-
     prices = np.array([[34.2, 59.57],[31.42, 55.88]])
+    shares_owned = np.array([[285, 107],[292, 109]])
+    inflow = 0
+    #current value = [16120.99,15265.56]
+       
+    result = transactions(inflow, shares_owned,assets_weights,prices, goal)
     
-    expected = test_data[0][1]
-    goal = test_data[0][0]
+    npt.assert_array_equal(result.delta_shares, expected_delta_shares) 
+    npt.assert_array_equal(result.outflows, expected_outflows)
 
-    result = transactions(-15000, assets_weights,prices, goal)
-    
-    npt.assert_array_equal(result.delta_shares, expected.delta_shares) 
-    assert result.outflows == expected.outflows
 
 

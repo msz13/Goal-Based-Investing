@@ -27,7 +27,31 @@ wypłata - cel2
 wypłata cel3
 '''
 
+@dataclass
+class Transaction:
+    delta_shares: np.array
+    outflows: int = 0
 
+def transactions(inflow, shares_owned, assets_weights, prices, goal = (0,0)):
+    
+    goal_target = goal[0] 
+    goal_max_outflow_percent = goal[1]
+    current_assets_value = shares_owned * prices
+    current_value = np.sum(current_assets_value, 1)
+    goal_allocation = current_value * goal_max_outflow_percent
+
+    outflows = np.where(goal_allocation >= goal_target, goal_target, goal_allocation)  
+     
+    expected_value = current_value + inflow - outflows
+    #max_outflow_value = current_value * goal_max_outflow_percent
+    
+    delta_value = expected_value.reshape((2,1)) * assets_weights - current_assets_value
+    
+    delta_shares =  np.fix(delta_value / prices)
+
+    outflows = np.round(np.abs(np.sum(delta_shares * prices,axis=1)),2)
+    
+    return Transaction(delta_shares, outflows)
     
 
 
@@ -36,11 +60,11 @@ class PortfoliosSimulator:
     def __init__(self) -> None:
         pass
 
-    def set_params(self, assets_prices, assets_weights, inflows, outflows):
+    def set_params(self, assets_prices, assets_weights, inflows, goal):
         self.__prices = assets_prices
         self.__assets_weights = assets_weights        
         self.__inflows = inflows
-        self.__planed_outflows = outflows
+        self.__goal = goal
 
     def get_porfolio_final_value(self):
         return np.around(np.sum(self.__shares.sum(0) * self.__prices[:,-1],axis=1),2)
@@ -52,9 +76,11 @@ class PortfoliosSimulator:
     def run(self):
         
         self.__shares = np.zeros((len(self.__inflows)+1,self.__prices.shape[0],self.__prices.shape[2]))
-        
-        for t in range (len(self.__inflows)):
-            transaction = transactions(self.__inflows[t],self.__assets_weights,self.__prices[:,t])
-            self.__shares = transaction.delta_shares
+        self.__outflows = np.zeros((len(self.__inflows)+1,self.__prices.shape[0],self.__prices.shape[2]))
 
-        #self.__assets_shares = shares.sum(0)
+        for t in range (len(self.__inflows)):
+            transaction = transactions(self.__inflows[t],self.__assets_weights,self.__prices[:,t], self.__goal)
+            self.__shares += transaction.delta_shares
+            self.__outflows[t] = transactions.outflows
+
+        

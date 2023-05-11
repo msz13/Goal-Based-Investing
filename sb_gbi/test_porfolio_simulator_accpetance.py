@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-from sb_gbi.portfolio_simulator import PortfoliosSimulator
+from portfolio_simulator import PortfoliosSimulator
         
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_should_get_porfolios_last_value_(prices, inflows, expected):
         assets_prices=prices,        
         assets_weights=np.array([0.6,0.4]),        
         inflows = inflows,
-        outflows = np.zeros(5)
+        goal = (0,0)
         )
 
 
@@ -50,10 +50,10 @@ def test_should_get_porfolios_outflows_(prices):
         
     inflows = np.array([10000,1000,1000,1000,1000])
 
-    planned_outflows = np.array([0,0,0,0,16000])
+    goals = (16000,1)
 
-    expected_final_value = np.array([306, 0])
-    expectet_outflows = np.array([15000, 15000])
+    expected_final_value = np.array([904.62, 0])
+    expectet_outflows = np.array([16000.00, 15398.00])
 
     portfolios_simulator = PortfoliosSimulator()
     
@@ -61,7 +61,7 @@ def test_should_get_porfolios_outflows_(prices):
         assets_prices=prices,        
         assets_weights=np.array([0.6,0.4]),       
         inflows = inflows,
-        outflows = planned_outflows
+        goal = goals
         )
 
 

@@ -22,7 +22,7 @@ def prices():
       
 
 
-test_data= [(np.array([10000,1000,1000,1000,1000]),[16306.50,15439.19]),
+test_data= [(np.array([10000,1000,1000,1000,1000]),[16873.39,15398.00]),
        (np.array([10000,0,0,0,0]), [11605.60, 10754.40])]
 
 @pytest.mark.parametrize('inflows,expected',test_data, ids=['inflows', 'no inflows'])
@@ -35,7 +35,7 @@ def test_should_get_porfolios_last_value_(prices, inflows, expected):
         assets_prices=prices,        
         assets_weights=np.array([0.6,0.4]),        
         inflows = inflows,
-        goal = (0,0)
+        goal = {}
         )
 
 
@@ -50,7 +50,10 @@ def test_should_get_porfolios_outflows_(prices):
         
     inflows = np.array([10000,1000,1000,1000,1000])
 
-    goals = (16000,1)
+    goals = {
+        5: (16000,1)
+    }
+    
 
     expected_final_value = np.array([904.62, 0])
     expectet_outflows = np.array([16000.00, 15398.00])
@@ -71,7 +74,7 @@ def test_should_get_porfolios_outflows_(prices):
     outflows = portfolios_simulator.get_outflows()    
 
     #npt.assert_array_equal(wealth, expected_final_value)
-    npt.assert_array_equal(outflows, expectet_outflows)
+    npt.assert_array_equal(outflows[-2], expectet_outflows)
 
 
 

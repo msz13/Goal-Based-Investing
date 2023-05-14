@@ -25,12 +25,14 @@ TODO
 ids = ['max withrowal 100, goal reached',
        'max withrowal 100, goal not reached', 
        'max withrowal less than 100, goal reached',
-       'max withrowal less than 100, goal not reached']
+       'max withrowal less than 100, goal not reached',
+       'no outflows']
 
-test_data = [((14000,1), [[-255, -88],[-285, -89]], [13963.16, 13928.02]),
+test_data = [((14000,1), [[-255, -88],[-285, -89]], [14000, 14000]),
              ((16000,1), [[-288, -101],[-291, -92]], [15866.17, 14284.18]),
-             ((11000.00,0.8), [[-202, -68],[-228, -68]], [10959.16, 10963.60]),
-             ((13000,0.8), [[-232, -79],[-236, -71]], [12640.43, 11382.60]),]
+             ((11000.00,0.8), [[-202, -68],[-228, -68]], [11000, 11000]),
+             ((13000,0.8), [[-232, -79],[-236, -71]], [12692.94, 11427.34]),
+             (None, [[-9,5],[-18,10]], [0,0])]
 
 
 @pytest.mark.parametrize('goal,expected_delta_shares,expected_outflows', test_data, ids=ids)

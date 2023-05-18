@@ -18,9 +18,7 @@ def prices():
                          [24.07, 51.67],
                          [25.76, 54.25],
                          [31.42, 55.88]]])
-
-      
-
+     
 
 test_data= [(np.array([10000,1000,1000,1000,1000]),[16873.39,15398.00]),
        (np.array([10000,0,0,0,0]), [11605.60, 10754.40])]
@@ -48,16 +46,13 @@ def test_should_get_porfolios_last_value_(prices, inflows, expected):
 
 
 
-
 def test_should_get_porfolios_outflows_single(prices):  
         
     inflows = np.array([10000,1000,1000,1000,1000,0])  
 
-    goals = {
-        5: (16000,1)
-    }  
+    goals = {5: (16000,1)}  
 
-    expected_final_value = np.array([873.39, 0])
+    expected_final_value = np.array([580.28, 0])
     expectet_outflows = np.array([[16000.00, 15398.00]])
 
     portfolios_simulator = PortfoliosSimulator()
@@ -76,7 +71,38 @@ def test_should_get_porfolios_outflows_single(prices):
     wealth = portfolios_simulator.get_porfolio_final_value()
 
     npt.assert_array_equal(outflows, expectet_outflows)
-    #npt.assert_array_equal(wealth, expected_final_value)
+    #npt.assert_array_equal(portfolios_simulator.get_shares(),[[10,4],[0,0]])
+    npt.assert_array_equal(wealth, expected_final_value)
+
+
+
+def test_should_get_porfolios_outflows_single(prices):  
+        
+    inflows = np.array([10000,1000,1000,1000,1000,0])  
+
+    goals = {3: (8000,1), 5: (16000,1)}  
+
+    expected_final_value = np.array([580.28, 0])
+    expectet_outflows = np.array([[8000, 8000], [6000, 3763.84]])
+
+    portfolios_simulator = PortfoliosSimulator()
+    
+    portfolios_simulator.set_params(
+        assets_prices=prices,        
+        assets_weights=np.array([0.6,0.4]),       
+        inflows = inflows,
+        goals = goals
+        )
+
+
+    portfolios_simulator.run()
+    
+    outflows = portfolios_simulator.get_outflows()    
+    wealth = portfolios_simulator.get_porfolio_final_value()
+
+    npt.assert_array_equal(outflows, expectet_outflows)
+    #npt.assert_array_equal(portfolios_simulator.get_shares(),[[10,4],[0,0]])
+    npt.assert_array_equal(wealth, expected_final_value)
 
 ''' outflows = {
     1: 10000,

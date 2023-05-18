@@ -71,7 +71,7 @@ class PortfoliosSimulator:
         self.__inflows = inflows
         self.__goals = goals
         self.T = np.max(list(self.__goals.keys()))+1
-        self.__shares = np.zeros((self.T,self.__prices.shape[0],self.__prices.shape[2]))
+        self.__shares = np.zeros((self.__prices.shape[0],self.__prices.shape[2]))
 
     def get_porfolio_final_value(self):
         return np.sum(self.__shares * self.__prices[:,-1],1)
@@ -89,7 +89,7 @@ class PortfoliosSimulator:
 
 
         for t in range (self.T):
-            transaction = transactions(self.__inflows[t], self.__shares[t], self.__assets_weights,self.__prices[:,t], self.__goals.get(t))
+            transaction = transactions(self.__inflows[t], self.__shares, self.__assets_weights,self.__prices[:,t], self.__goals.get(t))
             self.__shares += transaction.delta_shares
             if (self.__goals.get(t) is not None):
                 self.__outflows[0] = transaction.outflows

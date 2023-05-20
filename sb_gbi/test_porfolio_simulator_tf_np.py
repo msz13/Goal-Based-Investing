@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-from portfolio_simulator import PortfoliosSimulator, calculate_prob_of_goal_achivement
+from portfolio_simulator_tf_numpy import PortfoliosSimulator, calculate_prob_of_goal_achivement
         
 
 @pytest.fixture

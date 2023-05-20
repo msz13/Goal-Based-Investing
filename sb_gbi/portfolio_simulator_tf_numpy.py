@@ -1,5 +1,10 @@
-import numpy as np
+#import numpy as np
+import tensorflow as tf
+import tensorflow.experimental.numpy as np
 from dataclasses import dataclass 
+
+np.experimental_enable_numpy_behavior()
+
 
 
 goals = {

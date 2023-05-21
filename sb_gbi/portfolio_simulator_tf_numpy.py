@@ -37,6 +37,7 @@ class Transaction:
     delta_shares: np.array
     outflows: int = 0
 
+
 def transactions(inflow, shares_owned, assets_weights, prices, goal = (0,0)):
     
     goal_target = 0
@@ -55,7 +56,7 @@ def transactions(inflow, shares_owned, assets_weights, prices, goal = (0,0)):
     expected_value = current_value + inflow - outflows
     #max_outflow_value = current_value * goal_max_outflow_percent
     
-    delta_value = expected_value.reshape((len(expected_value),1)) * assets_weights - current_assets_value
+    delta_value = expected_value.reshape((expected_value.shape[0],1)) * assets_weights - current_assets_value
     
     delta_shares =  np.fix(delta_value / prices)
 
@@ -65,7 +66,7 @@ def transactions(inflow, shares_owned, assets_weights, prices, goal = (0,0)):
     
 def calculate_prob_of_goal_achivement(goals_targets: np.ndarray, goals_outflows: np.ndarray):
 
-    number_of_scenarios = len(goals_outflows[0])
+    number_of_scenarios = np.array(goals_outflows).shape[0]
     total_goals_outflows = np.sum(goals_outflows, axis=1)
     probabilities = total_goals_outflows / np.multiply(goals_targets, number_of_scenarios)
 
@@ -99,6 +100,7 @@ class PortfoliosSimulator:
         return calculate_prob_of_goal_achivement(goals_targets, self.get_outflows())
                      
     
+    @tf.function()
     def run(self):          
        
         self.__outflows = []

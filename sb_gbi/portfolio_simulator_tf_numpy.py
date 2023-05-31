@@ -62,7 +62,7 @@ def transactions(inflow, shares_owned, assets_weights, prices, goal = (0,0)):
 
     #outflows = np.round(np.abs(np.sum(delta_shares * prices,axis=1)),2)
     
-    return Transaction(delta_shares, outflows)
+    return delta_shares, outflows
     
 def calculate_prob_of_goal_achivement(goals_targets: np.ndarray, goals_outflows: np.ndarray):
 
@@ -105,11 +105,10 @@ class PortfoliosSimulator:
        
         self.__outflows = []
 
-
         for t in range (self.T):
-            transaction = transactions(self.__inflows[t], self.__shares, self.__assets_weights[t],self.__prices[:,t], self.__goals.get(t))
-            self.__shares += transaction.delta_shares
+            delta_shares, outflows = transactions(self.__inflows[t], self.__shares, self.__assets_weights[t],self.__prices[:,t], self.__goals.get(t))
+            self.__shares += delta_shares
             if (self.__goals.get(t) is not None):
-                self.__outflows.append(transaction.outflows)
+                self.__outflows.append(outflows)
 
         

@@ -1,24 +1,57 @@
-from model.grid import generateGrid
+from model.grid import generateGrid, WMax, WMin
 from model._utilities import Goals
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 
-portfolios = np.array([[0.05258386, 0.03704926],
-       [0.05515672, 0.03960988],
-       [0.05772681, 0.04625568],
-       [0.06029967, 0.05555016],
-       [0.06286483, 0.06637403],
-       [0.06545148, 0.07813246],
-       [0.06801664, 0.09041086],
-       [0.07059443, 0.103057  ],
-       [0.07315959, 0.11592848],
-       [0.07573245, 0.12898073],
-       [0.07830254, 0.14213997],
-       [0.0808754 , 0.15540374],
-       [0.08344549, 0.16872224],
-       [0.08601835, 0.18210899],
-       [0.08858351, 0.19552512]])
+portfolios = np.array([[0.0526, 0.037 ],
+       [0.0552, 0.0396],
+       [0.0577, 0.0463],
+       [0.0603, 0.0556],
+       [0.0629, 0.0664],
+       [0.0655, 0.0781],
+       [0.068 , 0.0904],
+       [0.0706, 0.1031],
+       [0.0732, 0.1159],
+       [0.0757, 0.129 ],
+       [0.0783, 0.1421],
+       [0.0809, 0.1554],
+       [0.0834, 0.1687],
+       [0.086 , 0.1821],
+       [0.0886, 0.1955]])
+
+test_data = [
+    (1,[0,],196),
+    (5,[0,0,0,0,0],576),
+    (1,[10],206 ),
+    (2,[10,10],303),
+    (5,[10,10,11,11,11],721)]
+
+@pytest.mark.parametrize('t,infusions,expected_result',test_data)
+def test_should_calculate_grid_max_value(t,infusions,expected_result):
+    
+    W0 = 100
+    result = WMax(t, W0, infusions,portfolios[-1,0], portfolios[-1,1], portfolios[0,1])
+
+    assert result == expected_result
+
+test_data = [
+    (1,[0,],[0], 58),
+    (5,[0,0,0,0,0],[0,0,0,0,0],32),
+    (1,[10],[0],68),
+    (5,[10,10,11,11,11],[0,0,0,0,0],62),
+    (1,[10],[20],48),
+    (5,[10,10,11,11,11],[0,0,20,0,50],3)
+    ]
+
+@pytest.mark.parametrize('t,infusions,max_goal_cost,expected_result',test_data)
+def test_should_calculate_grid_min_value(t,infusions,max_goal_cost,expected_result):
+    
+    W0 = 100
+    result = WMin(t, W0, infusions, max_goal_cost, portfolios[0,0], portfolios[0,1], portfolios[-1,1])
+
+    assert result == expected_result
 
 def test_should_generate_grid_without_infusions():
     

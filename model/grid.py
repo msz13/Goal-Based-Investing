@@ -1,19 +1,30 @@
 import numpy as np
 from model._utilities import Goals
 
-def WMax(t,W0, infusions, meanMax,stdMin,stdMax):
+def WMax(t: int,W0: int, infusions: int, meanMax: float ,stdMax: float, stdMin: float):
+    
+    drift = meanMax-(stdMin**2)/2
+    vioalitility = 3*stdMax
+    
+    valueOfInitialWelath = W0*np.exp(drift*t + vioalitility*np.sqrt(t))
+    
     valueOfInfusions = 0
-    for i in range(t):
-        valueOfInfusions += infusions[i]*np.exp((meanMax - (stdMin**2)/2)*(t-i) + (3*stdMax*np.sqrt(t-i)))
-                                                           
-    return W0*np.exp((meanMax-(stdMin**2)/2)*t + 3*stdMax*np.sqrt(t)) + valueOfInfusions
+    for p in range(t): 
+        valueOfInfusions += infusions[p]*np.exp(drift*(t-p-1) + vioalitility*np.sqrt(t-p-1))
+                                                              
+    return np.round(valueOfInitialWelath + valueOfInfusions,0)
 
-def WMin(t, W0, infusions, goal, meanMin, stdMin, stdMax):
+def WMin(t, W0: int, infusions: int, max_goal_cost: int, meanMin, stdMin, stdMax):
     valueOfInfusions = 0
-    for i in range(t):
-        valueOfInfusions += (infusions[i]-goal)*np.exp((meanMin - (stdMin**2)/2)*(t-i) - (3*stdMax*np.sqrt(t-i)))
+    drift = meanMin-(stdMax**2)/2
+    vioalitility = 3*stdMax
 
-    return W0*np.e**((meanMin-stdMax**2/2)*t - 3*stdMax*np.sqrt(t)) + valueOfInfusions
+    valueOfInitialWelath = W0*np.e**(drift*t - vioalitility*np.sqrt(t))
+
+    for p in range(t): 
+        valueOfInfusions += (infusions[p]-max_goal_cost[p])*np.exp(drift*(t-p-1) - vioalitility*np.sqrt(t-p-1))
+    
+    return  np.round(valueOfInitialWelath + valueOfInfusions)
 
 
 def __deductE(row, logW0):

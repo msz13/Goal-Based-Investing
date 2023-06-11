@@ -11,6 +11,7 @@ def __prob(W0, W1, mean, std, Infusion, Cost, h):
 def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions, h=1):
     l = len(portfolios)
     i = len(WT)
+    portfolios = np.array(portfolios)
     b = (portfolios[:,0]-0.5*portfolios[:,1]**2)*h
     bi = np.repeat(b, i).reshape(l*i,1)
     c = portfolios[:,1]*np.sqrt(h)
@@ -18,11 +19,14 @@ def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions,
    
     Wt1 = np.tile(WT1, (l*i,1))
     Wt = np.tile(WT,(l,1)).reshape(i*l,1)+infusions
+    #Wt1 = np.tile(WT1, (l*i,1))+infusions
     propabilities = norm.pdf((np.log(Wt1/Wt)- bi)/ci).reshape(l,i,len(WT1))
     result = np.zeros_like(propabilities)
     sums = np.expand_dims(propabilities.sum(2), axis=2)      
-    np.divide(propabilities, sums, out=result, where=sums>0)    
-    return result
+    np.divide(propabilities, sums, out=result, where=sums>0)
+    #result = propabilities    
+    return np.round(result,4)
+
 
 
 #@jit(nopython=True)

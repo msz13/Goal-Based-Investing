@@ -58,13 +58,8 @@ def test_should_generate_grid_without_infusions():
     W0 = 100
     imax = 10  
     
-    goals = Goals([{
-        "time": 5,
-        "cost": 150,
-        "utility": 100                
-    }])
-
-    infusions = np.zeros(goals.get_investment_period())
+    goals = [0,0,20,0,50]
+    infusions = [5,5,5,5,5]
  
     grid = generateGrid(W0, imax, infusions, goals, portfolios[0,0], portfolios[0,1], portfolios[-1,0], portfolios[-1,1])
 

@@ -33,17 +33,19 @@ def __deductE(row, logW0):
     return row - e
 
 def generateGrid(W0, iMax, infusions, goals: Goals, minMean, minStd, maxMean, maxStd) ->np.array:
-    T = goals.get_investment_period()
+    T = len(goals)
     grid = np.zeros((T,iMax))
     logW0 = np.log(W0)
     grid[0,:] = logW0
     Wmin = 1
-    for t in range(1,T):
-        cmax = goals.get_highest_cost_for_time(t)
-        wMin = WMin(t,W0,infusions,cmax, minMean,minStd,maxStd)
-        wMin = Wmin if np.all(wMin < Wmin) else wMin
-        wMax = WMax(t,W0, infusions, maxMean,minStd, maxStd)
-        row = np.linspace(np.log(wMin),np.log(wMax),iMax)
-        row = __deductE(row,logW0)
-        grid[t] = row
-    return np.exp(grid)
+    cmax = goals
+    wMin = WMin(T,W0,infusions,cmax, minMean,minStd,maxStd)
+    wMin = Wmin if np.all(wMin < Wmin) else wMin
+    wMax = WMax(T,W0, infusions, maxMean, maxStd, minStd,)
+    
+    row = np.linspace(np.log(wMin),np.log(wMax),iMax)
+    row = __deductE(row,logW0)
+    
+    row = np.exp(row)
+    return np.round(np.tile(row,(T+1,1)))
+

@@ -1,12 +1,13 @@
+from dataclasses import dataclass
 import numpy as np
 from numba import jit
-from model.propabilities import calculateTransitionPropabilitiesForAllPorfolios, calculateTransitionPropabilitiesForGoals, _calculate_cumulative_propabilities
-from model.grid import generateGrid
-from model._utilities import Goals
+from .propabilities import calculateTransitionPropabilitiesForAllPorfolios, calculateTransitionPropabilitiesForGoals, _calculate_cumulative_propabilities
+from .grid import generateGrid
+from ._utilities import Goals
 
 
 
-def __calculateWtc(WT, goals_costs, infusion):        
+def calculateWtc(WT, goals_costs, infusion):        
     k = len(goals_costs)
     cf = goals_costs - infusion
     Wtc = np.tile(WT,(k,1)) - cf.reshape((k,1))
@@ -33,7 +34,16 @@ def get_portfolios_strategies(VT1, probabilities):
 
     return portfolios_ids, maxes, chosen_propabilities
 
-def get_goals_strategies(propabilites, goal_utilities, VT1):
+def get_goals_values(goals,VTK0,W0):
+    goals_costs = np.asarray(goals)[:,0]
+    goals_utills = np.asarray(goals)[:,1]
+    Wtc = calculateWtc(W0,goals_costs,0)
+    VTK = np.where(Wtc > 0, np.interp(Wtc,W0,VTK0) + np.reshape(goals_utills,(len(goals_utills),1)), np.nan)
+    VT = np.vstack((VTK0, VTK))
+    
+    return VT
+
+def get_goals_strategies_dep(propabilites, goal_utilities, VT1):
     utilities = np.vstack(([0],np.expand_dims(goal_utilities,1)))
     VT = np.sum(propabilites * VT1,axis=2) + utilities
     result_V = np.nanmax(VT,0) 
@@ -50,6 +60,43 @@ def __get_porfolios_strategy_for_wealth_values(WT, Wtc, porfolios_strategies):
     index = np.argmin(difference, axis=1)
     index = index.reshape(k,i)
     return np.take(porfolios_strategies,index)
+
+@dataclass()
+class OptimisationResult:
+
+    porfolios_strategies: list
+    goals_strategies: list
+    values: list
+
+def get_optimal_strategies_for_T(goals,W0, portfolios_probabilities,VT1):
+    """
+    parameters:
+        goals: goals
+        W0: grid wealth volues fo t
+        portfolios_probabilities: transtion propabilieties from grid  in t and t+1 for all porfolios
+        VT1: values for t+1        
+    """
+    portfolios_strategies, VTK0, chosen_propabilieties = get_portfolios_strategies(VT1,portfolios_probabilities)
+    
+    if (goals is None):
+        return OptimisationResult(portfolios_strategies,[0,0,0,0],VTK0)
+    
+    VT = get_goals_values(goals, VTK0,W0)
+
+    goal_strategies = np.nanargmax(VT,0)
+    
+    goal_porfolios_strategies = np.zeros_like(W0)
+    
+    for i in range(len(W0)):
+        if (goal_strategies[i] == 0):
+            goal_porfolios_strategies[i] = portfolios_strategies[i]
+        else:
+            diff = W0 - np.array(goals)[goal_strategies[i]-1][0]
+            index = np.argmin(np.abs(diff))
+            goal_porfolios_strategies[i] = portfolios_strategies[index]
+    
+
+    return OptimisationResult(goal_porfolios_strategies,goal_strategies,np.nanmax(VT,0))
 
 '''
 Wt: wealth in time t

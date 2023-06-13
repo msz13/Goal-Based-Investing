@@ -1,5 +1,5 @@
 import pytest
-from .investment_planner import InvestmentPlanner, calculateBelman, calculateValuesForLastPeriod, get_portfolios_strategies, get_goals_values
+from .investment_planner import InvestmentPlanner, calculateBelman, calculateValuesForLastPeriod, get_portfolios_strategies, get_goals_values, get_optimal_strategies_for_T, OptimisationResult
 from ._utilities import Goals
 import numpy.testing as npt
 import numpy as np
@@ -118,23 +118,15 @@ def test_should_get_goals_values(goals, expected_V):
     #TODO reszta testow i kalkulacja dla innego t niz ostatnie '''
 
 
-@dataclass()
-class OptimisationResult:
-
-    porfolios_strategies: list
-    goals_strategies: list
-    values: list
-
-def get_optimal_strategies_for_T(goals,W0, portfolios_probabilities,VT1):
-    portfolios_strategies, VTK0, chosen_propabilieties = get_portfolios_strategies(VT1,portfolios_probabilities)
-    return OptimisationResult(portfolios_strategies,[0,0,0,0],VTK0)
-
 
 @pytest.mark.parametrize('goals,expected_portfolios_strategies,expected_goals_strategies,expected_values',
-                         [(None,[2, 2, 0, 0],[0,0,0,0],[35.8, 44.9, 87.8, 98.3])])
+                         [(None,[2, 2, 0, 0],[0,0,0,0],[35.8, 44.9, 87.8, 98.3]),
+                          ([[35,50]],[2,2,0,2],[0,0,0,1],[35.8, 44.9, 87.8, 116.35]),
+                          ([[30,50],[35,59]],[2,2,2,2],[0,0,1,2],[35.8, 44.9, 94.9, 125.35])])
 def test_should_calculateBelmanForT(goals,expected_portfolios_strategies,expected_goals_strategies,expected_values):
-    
-  W0 = [20,40,60,80]
+    # 44.9+50=94.9, 73.55+50=123.55
+    #35.8+100=135.8/94.8, 66.35+100=166.35/125.35
+  W0 = [25,30,60,80]
  
   portfolios_probabilities = np.array([[[1.,    0.,    0.,    0.   ],
                                 [0.926, 0.065, 0.008, 0.   ],

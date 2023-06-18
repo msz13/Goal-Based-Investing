@@ -27,7 +27,7 @@ def calculateValuesForLastPeriod(W: np.array, k: np.array):
 
 def get_portfolios_strategies(VT1, probabilities):
     Vt = VT1 * probabilities
-    sums = np.round(Vt.sum(2),4)
+    sums = np.round(Vt.sum(2),0)
     maxes = np.amax(sums,0)
     portfolios_ids = np.argmax(sums,0)    
     chosen_propabilities = np.take_along_axis(probabilities.transpose(1,0,2),portfolios_ids.reshape(len(VT1),1,1),1).squeeze(1)
@@ -68,30 +68,30 @@ class OptimisationResult:
     goals_strategies: list
     values: list
 
-def get_optimal_strategies_for_T(goals,W0, portfolios_probabilities,VT1):
+def get_optimal_strategies_for_T(goals,WT, portfolios_probabilities,VT1):
     """
     parameters:
         goals: goals
-        W0: grid wealth volues fo t
+        W0: grid wealth volues for t
         portfolios_probabilities: transtion propabilieties from grid  in t and t+1 for all porfolios
         VT1: values for t+1        
     """
     portfolios_strategies, VTK0, chosen_propabilieties = get_portfolios_strategies(VT1,portfolios_probabilities)
     
     if (goals is None):
-        return OptimisationResult(portfolios_strategies,[0,0,0,0],VTK0)
+        return OptimisationResult(portfolios_strategies,np.zeros_like(WT),VTK0)
     
-    VT = get_goals_values(goals, VTK0,W0)
+    VT = get_goals_values(goals, VTK0,WT)
 
     goal_strategies = np.nanargmax(VT,0)
     
-    goal_porfolios_strategies = np.zeros_like(W0)
+    goal_porfolios_strategies = np.zeros_like(WT)
     
-    for i in range(len(W0)):
+    for i in range(len(WT)):
         if (goal_strategies[i] == 0):
             goal_porfolios_strategies[i] = portfolios_strategies[i]
         else:
-            diff = W0 - np.array(goals)[goal_strategies[i]-1][0]
+            diff = WT - np.array(goals)[goal_strategies[i]-1][0]
             index = np.argmin(np.abs(diff))
             goal_porfolios_strategies[i] = portfolios_strategies[index]
     
@@ -157,7 +157,7 @@ def calculateBelman(grid,goals: Goals, portfolios):
     V[-1] = 0
 
     for t in range(T-2,-1,-1):
-        goal_strategies[t], portfolios_strategies[t], V[t], probabilities[t] = calculateBelmanForT(goals.get_k_array(t),0,grid[t], grid[t+1], V[t+1], portfolios)  
+        goal_strategies[t], portfolios_strategies[t], V[t], probabilities[t] = get_optimal_strategies_for_T(goals.get_k_array(t),0,grid[t], grid[t+1], V[t+1], portfolios)  
        
     
     return goal_strategies, portfolios_strategies, probabilities

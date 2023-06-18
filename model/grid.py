@@ -1,5 +1,5 @@
 import numpy as np
-from model._utilities import Goals
+from ._utilities import Goals
 
 def WMax(t: int,W0: int, infusions: int, meanMax: float ,stdMax: float, stdMin: float):
     
@@ -33,7 +33,7 @@ def __deductE(row, logW0):
     return row - e
 
 def generateGrid(W0, iMax, infusions, goals: Goals, minMean, minStd, maxMean, maxStd) ->np.array:
-    T = len(goals)
+    T = len(infusions)
     grid = np.zeros((T,iMax))
     logW0 = np.log(W0)
     grid[0,:] = logW0

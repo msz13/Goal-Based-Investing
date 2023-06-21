@@ -47,5 +47,5 @@ def generateGrid(W0, iMax, infusions, goals: Goals, minMean, minStd, maxMean, ma
     row = __deductE(row,logW0)
     
     row = np.exp(row)
-    return np.round(np.tile(row,(T+1,1)))
+    return np.round(np.tile(row,(T+1,1)),1)
 

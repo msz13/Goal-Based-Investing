@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 from numba import jit
-from .propabilities import calculateTransitionPropabilitiesForAllPorfolios, calculateTransitionPropabilitiesForGoals, _calculate_cumulative_propabilities
+from .propabilities import calculateTransitionPropabilitiesForAllPorfolios, calculateTransitionPropabilitiesForGoals
 from .grid import generateGrid
 from ._utilities import Goals
 
@@ -27,7 +27,7 @@ def calculateValuesForLastPeriod(W: np.array, k: np.array):
 
 def get_portfolios_strategies(VT1, probabilities):
     Vt = VT1 * probabilities
-    sums = np.round(Vt.sum(2),0)
+    sums = np.round(Vt.sum(2),1)
     maxes = np.amax(sums,0)
     portfolios_ids = np.argmax(sums,0)    
     chosen_propabilities = np.take_along_axis(probabilities.transpose(1,0,2),portfolios_ids.reshape(len(VT1),1,1),1).squeeze(1)
@@ -179,9 +179,8 @@ class InvestmentPlanner:
         self.probabilitiesT = np.zeros((T,self.iMax, self.iMax))
         
         #self._goal_strategies, self._portfolio_strategies, self.probabilitiesT = calculateBelman(self.grid, self.k_dict, portfolios)
-                        
-        self.cum_propabilities =  _calculate_cumulative_propabilities(self.probabilitiesT)
-             
+                      
+                     
         
     @property    
     def glide_paths(self):

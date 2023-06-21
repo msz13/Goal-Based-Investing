@@ -25,7 +25,7 @@ def calculateTransitionPropabilitiesForAllPorfolios(portfolios,WT,WT1,infusions,
     sums = np.expand_dims(propabilities.sum(2), axis=2)      
     np.divide(propabilities, sums, out=result, where=sums>0)
     #result = propabilities    
-    return np.round(result,4)
+    return result
 
 
 
@@ -53,15 +53,23 @@ def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     return result
 
 
-def _calculate_cumulative_propabilities(probabilitiesT):
-        i = probabilitiesT[0].shape[1]
-        T = probabilitiesT.shape[0]
-        cumulativeProbabilities = np.zeros((T, probabilitiesT[0].shape[1]))
+def select_probabilities_for_chosen_strategies(probabilities,portfolios_strategies):
+    p = probabilities.transpose(1,0,2)
+    s = portfolios_strategies.reshape(probabilities.shape[2],1,1)
+    return np.take_along_axis(p,s,1).squeeze(1)
+
+
+def calculate_cumulative_propabilities(probabilities, goals_strategies, W0index):
+        i = probabilities[0].shape[1]
+        T = probabilities.shape[0] + 1
+        cumulativeProbabilities = np.zeros((T, probabilities[0].shape[1]))
         cumulativeProbabilities[0,:] = 1
-        cumulativeProbabilities[1] = probabilitiesT[0,0]
-        for t in range(2, T):
+        cumulativeProbabilities[1] = probabilities[0,0]
+        ''' for t in range(2, T):
                 for it in range(0,i):                      
-                        cumulativeProbabilities[t,it] = np.sum(probabilitiesT[t-1,:,it]*cumulativeProbabilities[t-1,it])
-        return cumulativeProbabilities
+                        cumulativeProbabilities[t,it] = np.sum(probabilities[t-1,:,it]*cumulativeProbabilities[t-1,it])
+        '''
+        goals_probs = np.sum(cumulativeProbabilities[1])
+        return goals_probs
 
 

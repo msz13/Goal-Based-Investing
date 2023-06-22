@@ -134,6 +134,27 @@ def test_should_calculate_cumulative_propabilities():
     npt.assert_array_almost_equal(result,expected_goals_probabilities,4)
 
     
+def test_should_k_propabilities_for_T_2():
+    
+    probabilities = np.array([[[0.367, 0.275, 0.225, 0.133],
+                              [0.287, 0.264, 0.247, 0.202],
+                              [0.017, 0.105, 0.244, 0.634],
+                              [0.001, 0.017, 0.075, 0.908]
+                              ],
+                              [[0.367, 0.275, 0.225, 0.133],
+                              [0.287, 0.264, 0.247, 0.202],
+                              [0.017, 0.105, 0.244, 0.634],
+                              [0.001, 0.017, 0.075, 0.908]
+                              ]])    
+    W0index = 0
+    goals_strategies = [[0,0,0,0],
+                        [1,1,1,1]]
+
+    expected_goals_probabilities = [None,[1]]
+
+    result = calculate_cumulative_propabilities(probabilities,goals_strategies,W0index)
+
+    npt.assert_equal(result,expected_goals_probabilities,4)
 
 
     

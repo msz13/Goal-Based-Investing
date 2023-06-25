@@ -62,14 +62,18 @@ def select_probabilities_for_chosen_strategies(probabilities,portfolios_strategi
 def calculate_cumulative_propabilities(probabilities, goals_strategies, W0index):
         i = probabilities[0].shape[1]
         T = probabilities.shape[0] + 1
-        cumulativeProbabilities = np.zeros((T, probabilities[0].shape[1]))
-        cumulativeProbabilities[0,:] = 1
-        cumulativeProbabilities[1] = probabilities[0,0]
-        ''' for t in range(2, T):
-                for it in range(0,i):                      
-                        cumulativeProbabilities[t,it] = np.sum(probabilities[t-1,:,it]*cumulativeProbabilities[t-1,it])
-        '''
-        goals_probs = np.sum(cumulativeProbabilities[1])
+        goal_ids = np.unique(goals_strategies)
+        goals_probs = {}
+
+        cumulativeProbabilities = np.zeros((T, i))
+        cumulativeProbabilities[0,W0index] = 1
+        #cumulativeProbabilities[1] = probabilities[0,0]
+        for i in range(i):
+            cumulativeProbabilities[1,i] = cumulativeProbabilities[0] @ probabilities[0,:,i]
+        
+        for goal in goal_ids:
+            goals_probs[1] = {goal: np.sum(cumulativeProbabilities[-1],where=goals_strategies==goal)}
+            
         return goals_probs
 
 

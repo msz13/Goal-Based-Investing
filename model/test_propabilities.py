@@ -1,5 +1,6 @@
 import numpy.testing as npt
 import numpy as np
+import pytest
 from scipy.stats import norm
 from model.propabilities import (
     calculateTransitionPropabilitiesForAllPorfolios, 
@@ -116,22 +117,30 @@ calculate propability test
 - T4 multiple single goals in different time, WTC midle grid point 
 '''
 
+@pytest.fixture()
+def selected_probabilities():
+    return np.array([[[0.367, 0.275, 0.225, 0.133],
+                      [0.287, 0.264, 0.247, 0.202],
+                      [0.017, 0.105, 0.244, 0.634],
+                      [0.001, 0.017, 0.075, 0.908]
+                      ]])    
 
-def test_should_calculate_cumulative_propabilities():
 
-    probabilities = np.array([[[0.367, 0.275, 0.225, 0.133],
-                              [0.287, 0.264, 0.247, 0.202],
-                              [0.017, 0.105, 0.244, 0.634],
-                              [0.001, 0.017, 0.075, 0.908]
-                              ]])    
+@pytest.mark.parametrize('T,goals_strategies,expected_goals_probabilities',[
+    (1,[1,2,3,4],{1:{1:0.367, 2:0.275, 3:0.225, 4:0.133}}),
+    (1,[1,1,1,1],{1:{1:1}}),
+    (1,[0,0,1,1],{1:{0:0.642, 1:0.358}}),
+    (2,[None,[1,2,3,4]],{2:{1:0.2176,2:0.1994,3:0.2154,4:0.3678}})
+    ])
+def test_should_calculate_cumulative_propabilities(T,goals_strategies,expected_goals_probabilities,selected_probabilities,):
+     
     W0index = 0
-    goals_strategies = [1,1,1,1]
 
-    expected_goals_probabilities = 1
-
+    probabilities = np.tile(selected_probabilities,(T,1,1))
+        
     result = calculate_cumulative_propabilities(probabilities,goals_strategies,W0index)
-
-    npt.assert_array_almost_equal(result,expected_goals_probabilities,4)
+    
+    assert result == expected_goals_probabilities
 
     
 def test_should_k_propabilities_for_T_2():
@@ -148,9 +157,9 @@ def test_should_k_propabilities_for_T_2():
                               ]])    
     W0index = 0
     goals_strategies = [[0,0,0,0],
-                        [1,1,1,1]]
+                        [1,2,3,4]]
 
-    expected_goals_probabilities = [None,[1]]
+    expected_goals_probabilities = [None,[0.217572, 0.17799 , 0.136846, 0.875581]]
 
     result = calculate_cumulative_propabilities(probabilities,goals_strategies,W0index)
 

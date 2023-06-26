@@ -127,10 +127,11 @@ def selected_probabilities():
 
 
 @pytest.mark.parametrize('T,goals_strategies,expected_goals_probabilities',[
-    (1,[1,2,3,4],{1:{1:0.367, 2:0.275, 3:0.225, 4:0.133}}),
-    (1,[1,1,1,1],{1:{1:1}}),
-    (1,[0,0,1,1],{1:{0:0.642, 1:0.358}}),
-    (2,[None,[1,2,3,4]],{2:{1:0.2176,2:0.1994,3:0.2154,4:0.3678}})
+    (1,[[1,2,3,4]],{1:{1:0.367, 2:0.275, 3:0.225, 4:0.133}}),
+    (1,[[1,1,1,1]],{1:{1:1}}),
+    (1,[[0,0,1,1]],{1:{0:0.642, 1:0.358}}),
+    (2,[[0,0,0,0],[1,2,3,4]],{1:{0:1}, 2:{1:0.218,2:0.199,3:0.215,4:0.368}}),
+    (2,[[0,0,0,0],[0,1,2,2]],{1:{0:1}, 2:{0:0.218,1:0.199,2:0.583}}),
     ])
 def test_should_calculate_cumulative_propabilities(T,goals_strategies,expected_goals_probabilities,selected_probabilities,):
      
@@ -138,7 +139,7 @@ def test_should_calculate_cumulative_propabilities(T,goals_strategies,expected_g
 
     probabilities = np.tile(selected_probabilities,(T,1,1))
         
-    result = calculate_cumulative_propabilities(probabilities,goals_strategies,W0index)
+    result = calculate_cumulative_propabilities(probabilities,np.asarray(goals_strategies),W0index)
     
     assert result == expected_goals_probabilities
 

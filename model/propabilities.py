@@ -53,27 +53,47 @@ def calculateTransitionPropabilitiesForGoals(WTc, Wt1, portfolios_wtc, h=1):
     return result
 
 
-def select_probabilities_for_chosen_strategies(probabilities,portfolios_strategies):
-    p = probabilities.transpose(1,0,2)
-    s = portfolios_strategies.reshape(probabilities.shape[2],1,1)
-    return np.take_along_axis(p,s,1).squeeze(1)
+def select_probabilities_for_chosen_strategies(probabilities,portfolios_strategies, goal_strategies, goal_costs, grid):
+    i = portfolios_strategies.shape[0]
+    selected_probabilities = np.zeros((i,i))
+
+
+    for it in range(i):
+        probs = 0
+        if goal_strategies[it]== 0:
+            s = int(portfolios_strategies[it])
+            probs =  probabilities[s,it]                    
+        else:
+            c = grid[it] - goal_costs[goal_strategies[it]-1]
+            probs = np.zeros(i)
+            for itc in range(i):
+                probs[itc] = np.interp(c,grid,selected_probabilities[:,itc])                
+        selected_probabilities[it] = probs
+
+
+    return selected_probabilities
 
 
 def calculate_cumulative_propabilities(probabilities, goals_strategies, W0index):
         i = probabilities[0].shape[1]
-        T = probabilities.shape[0] + 1
-        goal_ids = np.unique(goals_strategies)
-        goals_probs = {}
+        T = probabilities.shape[0] 
+                
+        result = {}
 
-        cumulativeProbabilities = np.zeros((T, i))
+        cumulativeProbabilities = np.zeros((T+1, i))
         cumulativeProbabilities[0,W0index] = 1
-        #cumulativeProbabilities[1] = probabilities[0,0]
-        for i in range(i):
-            cumulativeProbabilities[1,i] = cumulativeProbabilities[0] @ probabilities[0,:,i]
+
+        for t in range(1,T+1):
+            for it in range(i):
+                cumulativeProbabilities[t,it] = cumulativeProbabilities[t-1] @ probabilities[t-1,:,it]
         
-        for goal in goal_ids:
-            goals_probs[1] = {goal: np.sum(cumulativeProbabilities[-1],where=goals_strategies==goal)}
-            
-        return goals_probs
+        for t in range(T):
+            goal_ids = np.unique(goals_strategies[t])
+            goals_probs = {}
+            for goal in goal_ids:
+                goals_probs[goal] = np.round(np.sum(cumulativeProbabilities[t+1],where=goals_strategies[t]==goal),3)
+            result[t+1] = goals_probs
+        
+        return result
 
 

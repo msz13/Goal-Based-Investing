@@ -74,8 +74,35 @@ def test_should_calculate_transition_propabilities_for_goals():
     npt.assert_almost_equal(result[1,1], expected3, 3)
 
 
+@pytest.fixture()
+def expected_probabilities_no_goals():
+    return np.array([[0.368, 0.275, 0.225, 0.133],
+                     [0.287, 0.264, 0.247, 0.202],
+                     [0.017, 0.105, 0.244, 0.634],
+                     [0.001, 0.017, 0.075, 0.908]
+                     ])
 
-def test_should_select_probabilities_for_chosen_porfolios():
+@pytest.fixture()
+def expected_probabilities_for_goals():
+    return np.array([[0.368, 0.275, 0.225, 0.133],
+                     [0.287, 0.264, 0.247, 0.202],
+                     [0.368, 0.275, 0.225, 0.133],
+                     [0.287, 0.264, 0.247, 0.202]
+                     ])
+
+@pytest.fixture()
+def expected_probabilities(): 
+    return np.array([[0.368, 0.275, 0.225, 0.133],
+                     [0.287, 0.264, 0.247, 0.202],
+                     [0.017, 0.105, 0.244, 0.634],
+                     [0.348, 0.272, 0.23, 0.150]
+                     ])
+
+
+@pytest.mark.parametrize('goals_strategies,expected',[
+    (np.array([0,0,0,0]),expected_probabilities_no_goals)
+    ])
+def test_should_select_probabilities_for_chosen_porfolios(goals_strategies,expected, request):
 
     probabilities =  np.array([[[1.,    0.,    0.,    0.   ],
                                 [0.926, 0.065, 0.008, 0.   ],
@@ -93,17 +120,15 @@ def test_should_select_probabilities_for_chosen_porfolios():
                                 [0.215, 0.241, 0.257, 0.288]]])
     
     porfolios_strategies = np.array([2,2,0,0])
-    
-    expected_propabilities = np.array([[0.368, 0.275, 0.225, 0.133],
-                                       [0.287, 0.264, 0.247, 0.202],
-                                       [0.017, 0.105, 0.244, 0.634],
-                                       [0.001, 0.017, 0.075, 0.908]
-                                       ])
-    
-    selected_probabilities = select_probabilities_for_chosen_strategies(probabilities,porfolios_strategies)
+    #goals_strategies = np.array([0,0,0,0])
+    goal_costs = np.array([0])
+    grid = [10,30, 40,60]
+
+    selected_probabilities = select_probabilities_for_chosen_strategies(probabilities,porfolios_strategies,goals_strategies,goal_costs,grid)
+
     
     assert probabilities.shape == (3,4,4)
-    npt.assert_array_equal(selected_probabilities,expected_propabilities)
+    npt.assert_array_equal(selected_probabilities,request.getfixturevalue(expected))
 
 
 
@@ -127,11 +152,11 @@ def selected_probabilities():
 
 
 @pytest.mark.parametrize('T,goals_strategies,expected_goals_probabilities',[
-    (1,[[1,2,3,4]],{1:{1:0.367, 2:0.275, 3:0.225, 4:0.133}}),
-    (1,[[1,1,1,1]],{1:{1:1}}),
-    (1,[[0,0,1,1]],{1:{0:0.642, 1:0.358}}),
-    (2,[[0,0,0,0],[1,2,3,4]],{1:{0:1}, 2:{1:0.218,2:0.199,3:0.215,4:0.368}}),
-    (2,[[0,0,0,0],[0,1,2,2]],{1:{0:1}, 2:{0:0.218,1:0.199,2:0.583}}),
+    (1,[[0,0,0,0],[1,2,3,4]],{1:{1:0.367, 2:0.275, 3:0.225, 4:0.133}}),
+    (1,[[0,0,0,0],[1,1,1,1]],{1:{1:1}}),
+    (1,[[0,0,0,0],[0,0,1,1]],{1:{0:0.642, 1:0.358}}),
+    (2,[[0,0,0,0],[0,0,0,0],[1,2,3,4]],{1:{0:1}, 2:{1:0.218,2:0.199,3:0.215,4:0.368}}),
+    (2,[[0,0,0,0],[0,0,0,0],[0,1,2,2]],{1:{0:1}, 2:{0:0.218,1:0.199,2:0.583}}),
     ])
 def test_should_calculate_cumulative_propabilities(T,goals_strategies,expected_goals_probabilities,selected_probabilities,):
      
@@ -167,7 +192,6 @@ def test_should_k_propabilities_for_T_2():
     npt.assert_equal(result,expected_goals_probabilities,4)
 
 
-    
 
     
  

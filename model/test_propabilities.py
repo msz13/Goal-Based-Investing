@@ -162,7 +162,7 @@ def test_should_calculate_cumulative_propabilities(T,goals_strategies,expected_g
      
     W0index = 0
 
-    probabilities = np.tile(selected_probabilities,(T,1,1))
+    probabilities = np.tile(selected_probabilities,(T+1,1,1))
         
     result = calculate_cumulative_propabilities(probabilities,np.asarray(goals_strategies),W0index)
     

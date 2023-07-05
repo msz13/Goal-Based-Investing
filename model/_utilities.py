@@ -10,7 +10,7 @@ class Goals:
         return self.__k_dict
     
     def get_investment_period(self):
-        return np.fromiter(self.__k_dict.keys(), np.int32).max() + 2
+        return np.fromiter(self.__k_dict.keys(), np.int32).max() + 1
     
     def get_k_array(self, t):
         return self.__k_dict.get(t)

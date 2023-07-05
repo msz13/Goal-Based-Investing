@@ -33,7 +33,7 @@ def __deductE(row, logW0):
     return row - e
 
 def generateGrid(W0, iMax, infusions, goals: Goals, minMean, minStd, maxMean, maxStd) ->np.array:
-    T = len(infusions)
+    T = len(goals)
     grid = np.zeros((T,iMax))
     logW0 = np.log(W0)
     grid[0,:] = logW0

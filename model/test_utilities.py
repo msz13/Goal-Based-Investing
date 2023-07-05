@@ -42,7 +42,7 @@ def test_should_return_investment_period_length():
 
     result = goals.get_investment_period()
 
-    assert result == 12
+    assert result == 11
 
 
 def test_should_get_highest_costs():
@@ -62,7 +62,7 @@ def test_should_get_highest_costs():
 
     result = goals.get_highest_costs()    
 
-    npt.assert_array_equal(result,[0,0,0,0,0,150,0])
+    npt.assert_array_equal(result,[0,0,0,0,0,150])
     
 
 def test_should_get_costs_for_time():

@@ -87,7 +87,7 @@ def calculate_cumulative_propabilities(probabilities, goals_strategies, W0index)
             for it in range(i):
                 cumulativeProbabilities[t,it] = cumulativeProbabilities[t-1] @ probabilities[t-1,:,it]
         
-        for t in range(1,T-1):
+        for t in range(1,T):
             goal_ids = np.unique(goals_strategies[t])
             goals_probs = {}
             for goal in goal_ids:

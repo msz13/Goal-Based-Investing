@@ -1,0 +1,57 @@
+from regime_switching_brownian_motion import RegimeSwithingWienerProcess
+
+#zaimportować mixin moze zrobić fork
+
+
+def test_initalize():
+    mu = [0.09, 0.02]
+    sig = [0.08,0.18]
+    p = [0.93, 0.035]
+
+
+    model = RegimeSwithingWienerProcess(mu,sig,p)
+
+    coef = model.coefs
+
+    assert coef == {'mu1': 0.09, 
+                    'mu2': 0.02,
+                    'sig1': 0.08,
+                    'sig2': 0.18,
+                    'p[0->0]': 0.93,
+                    'p[1->0]': 0.035
+                     }
+
+def test_next_step():
+
+    mu = [0.09, 0.02]
+    sig = [0.08,0.18]
+    p = [0.93, 0.035]
+
+    current_state = 0
+
+    model = RegimeSwithingWienerProcess(mu,sig,p)
+
+    next_value, next_regime = model.step(100,1,current_state)
+
+
+""" 
+class IndependentLogNormal:
+    def __init__(self) -> None:
+        pass
+
+class RegimeSwithing:
+
+    def scenarios(x0, dt, n_scenarios, n_steps, regimes, random_state):
+        return
+
+    def step(x0,dt, regime):
+        return
+    
+    def regimes(initialregime, n_scenarios, n_steps, random_state):
+        return [[1,1,2]
+                [2,2,2]]
+    
+    def next_regime(initial_regime):
+        return 1
+
+ """

@@ -1,12 +1,12 @@
 from inspect import getfullargspec
+from unittest import mock
 from esg.regime_switching_brownian_motion import IndependentLogNormal, RegimeSwitching
 import pytest
 import numpy as np
 import pandas as pd
+from unittest.mock import patch
 import unittest
 
-def test_regime2():
-    assert 1 ==1
 
 
 class BaseProcessMixin:
@@ -251,13 +251,24 @@ class RegimeSwithing:
  """
 
 
-class TestRegimeSwithing(BaseProcessMixin, unittest.TestCase):
+class TestRegimeSwithing():
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
       cls.model = RegimeSwitching.example()
       cls.single_x0 = np.array([100.0])
       cls.multiple_x0 = np.full(50, 100.0)
+
+    @pytest.mark.parametrize('current_regime,random,expected_regime',[(0,0.65,0),(0,0.66,1),(1,0.70,1), (1,0.71,0)])
+    def test_should_next_regime_return_same_regime_if_random_value_is_lower(self,current_regime,random,expected_regime):
+                            
+        with patch('numpy.random.uniform') as mock_rand:
+            mock_rand.return_value = random
+            regime = self.model.next_regime(current_regime) 
+                      
+        assert regime == expected_regime
+
+        
 
 
     

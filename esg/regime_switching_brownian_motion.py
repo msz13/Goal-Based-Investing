@@ -28,7 +28,7 @@ class IndependentLogNormal(stochastic_process.StochasticProcess):
         return cls(mu=0.05, sigma=0.2)
 
 
-class RegimeSwitching(stochastic_process.StochasticProcess):
+class RegimeSwitching():
 
     def __init__(self, mu: np.ndarray, sigma: np.ndarray, probs: np. ndarray) -> None:
         super().__init__()
@@ -52,6 +52,19 @@ class RegimeSwitching(stochastic_process.StochasticProcess):
 
         return super().step(x0,dt,random_state)
     
+    def next_regime(self, current_regime):
+        #np.random.seed(seed)
+
+        next_regime = None
+
+        if current_regime == 0:
+            next_regime = 0 if np.random.uniform(0,1.01) <= self.probs[0] else 1
+        
+        else:
+            next_regime = 1 if np.random.uniform(0,1.01) <= self.probs[1] else 0
+
+        return next_regime
+    
     @classmethod
     def example(cls) -> "RegimeSwitching":
-        return cls(mu=[0.05, 0.09], sigma=[0.02, 0.15], probs=[0.70, 0.30])
+        return cls(mu=[0.05, 0.09], sigma=[0.02, 0.15], probs=[0.65, 0.70])

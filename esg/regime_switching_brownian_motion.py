@@ -56,14 +56,24 @@ class RegimeSwitching():
         #np.random.seed(seed)
 
         next_regime = None
+        random = self.random()
+        probs = self.probs[current_regime]
+        upper_bound = np.array([[probs]])
+        upper_bound = np.insert(upper_bound,-1,[1])
+        lower_bound = np.array([0])
+        lower_bound = np.insert(lower_bound,0,[0])
 
-        if current_regime == 0:
-            next_regime = 0 if np.random.uniform(0,1.01) <= self.probs[0] else 1
+        """ if current_regime == 0:
+            next_regime = 0 if random <= probs else 1
         
         else:
-            next_regime = 1 if np.random.uniform(0,1.01) <= self.probs[1] else 0
-
+            next_regime = 1 if random <= probs else 0 """
+                
+        next_regime = np.where(np.all([lower_bound < random, random<= upper_bound]))
         return next_regime
+
+    def random(self):
+        return np.random.uniform(0,1.01)
     
     @classmethod
     def example(cls) -> "RegimeSwitching":

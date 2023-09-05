@@ -69,7 +69,7 @@ class RegimeSwitching():
         else:
             next_regime = 1 if random <= probs else 0 """
                 
-        next_regime = np.where(np.all([lower_bound < random, random<= upper_bound]))
+        next_regime = np.where(np.logical_and(random > lower_bound, random <= upper_bound))
         return next_regime
 
     def random(self):

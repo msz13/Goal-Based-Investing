@@ -259,7 +259,7 @@ class TestRegimeSwithing():
       cls.single_x0 = np.array([100.0])
       cls.multiple_x0 = np.full(50, 100.0)
 
-    @pytest.mark.parametrize('current_regime,random,expected_regime',[(0,0.65,0),(0,0.66,1),(1,0.70,1), (1,0.71,0)])
+    @pytest.mark.parametrize('current_regime,random,expected_regime',[(0,0.65,0),(0,0.66,1),(1,0.061,1), (1,0.06,0)])
     def test_should_next_regime_return_same_regime_if_random_value_is_lower(self,current_regime,random,expected_regime):
                             
         with patch('numpy.random.uniform') as mock_rand:

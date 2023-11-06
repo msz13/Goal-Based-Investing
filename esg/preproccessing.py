@@ -43,8 +43,13 @@ def corr_to_cov(corr_matrix, std_devs):
     D = np.diag(std_devs)
     return D @ corr_matrix @ D
 
-def annualised_mean(returns):
-    return returns.mean() * 12
+def annualised_mean(returns, data_freq='m'):
+    periods = {
+        'm': 12,
+        'q': 4,
+        'y': 1
+    }
+    return returns.mean() * periods[data_freq]
 
 def annualised_sigma(returns):
     return returns.std() * 12**(1/2)
@@ -62,7 +67,7 @@ def max_drawdown(returns):
     drawdown = wealth_index/rolling_max -1
     return drawdown.min()
     
-def assets_performance(returns: pd.DataFrame):
-    #return returns.agg(['mean', 'std', 'median', 'skew', 'kurtosis', sharp_ratio, max_drawdown])
-    return returns.agg([annualised_mean, annualised_sigma, 'skew', 'kurtosis', sharp_ratio, max_drawdown])
+def assets_performance(returns: pd.DataFrame, data_freq):
+    
+    return returns.agg([lambda x: annualised_mean(x,data_freq), annualised_sigma, 'skew', 'kurtosis', sharp_ratio, max_drawdown])
 

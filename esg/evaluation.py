@@ -2,15 +2,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from preproccessing import assets_performance
+import seaborn as sns
 
-def fanchart(hist,percentiles):
-    length = 60
-    x = np.linspace(0,length+1,length+1)
+def fanchart(hist,scenarios):
+    percentiles = np.percentile(scenarios,[1,5,25,50,75,95,99],axis=0)
+    hist_len = hist.shape[0]
+    n_steps = scenarios.shape[1] 
+    x1 = np.arange(-hist_len+1,1)
+    x2 = np.arange(0,n_steps)
+    
     fig,ax = plt.subplots(figsize=(12,6))
-    ax.fill_between(x=x,y1=percentiles[0],y2=percentiles[6], color='blue', alpha=0.1)
-    ax.fill_between(x=x,y1=percentiles[1],y2=percentiles[5], color='blue', alpha=0.2)
-    ax.fill_between(x=x,y1=percentiles[2],y2=percentiles[4], color='blue', alpha=0.3)
-    ax.plot(percentiles[2],color='blue')
+    ax.plot(x1, hist,color='red')
+    ax.plot(x2, percentiles[3], color='blue')
+      
+    for i in range(1,4):
+        ax.fill_between(x=x2,y1=percentiles[i-1],y2=percentiles[-i], color='blue', alpha=i/10)
 
 def percentile_summary(scenarios, data_freq=1):
     percentiles = [1,5,25,50,75,95,99]
@@ -33,4 +39,10 @@ def describe_scenarios_vertically(scenarios: pd.DataFrame, data_freq):
     annualised mean, std, skew, kurtosis, sharp ratio, maxdrawdown
     """
     return assets_performance(scenarios, data_freq).T.describe()
+
+def sample_paths(scenarios, number_of_paths=10):
+    ax,fig = plt.subplots(figsize=(12,4))
+    number_of_scenarios = scenarios.shape[0]
+    for i in np.random.randint(0,number_of_scenarios,number_of_paths):
+        sns.lineplot(data=scenarios[i])
     

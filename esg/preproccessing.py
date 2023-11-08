@@ -67,7 +67,13 @@ def max_drawdown(returns):
     drawdown = wealth_index/rolling_max -1
     return drawdown.min()
     
-def assets_performance(returns: pd.DataFrame, data_freq):
-    
-    return returns.agg([lambda x: annualised_mean(x,data_freq), annualised_sigma, 'skew', 'kurtosis', sharp_ratio, max_drawdown])
+def assets_performance(returns: pd.DataFrame, data_freq='m'):
+    func = {"Annualised Mean": lambda x: annualised_mean(x,data_freq), 
+            'Annualised Sigma': annualised_sigma,
+            'Skew': 'skew',
+            'Kurtosis': 'kurtosis',
+            'Sharp_ratio': sharp_ratio,
+            'Max drowdawn': max_drawdown
+            }
+    return returns.agg(func)
 

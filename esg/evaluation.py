@@ -18,16 +18,16 @@ def fanchart(hist,scenarios):
     for i in range(1,4):
         ax.fill_between(x=x2,y1=percentiles[i-1],y2=percentiles[-i], color='blue', alpha=i/10)
 
-def percentile_summary(scenarios, data_freq=1):
+def percentile_summary(scenarios, data_freq=1, years=np.array([1,2,3,5,10,15,20,50])):
     percentiles = [1,5,25,50,75,95,99]
     perc = np.percentile(scenarios,percentiles,axis=0)
-    years = np.array([1,2,3,5,10,15,20,50]) *data_freq
+    periods = np.array([1,2,3,5,10,15,20,50]) * data_freq
 
 
     perc_summary = pd.DataFrame({})
    
-    for year in years:
-        perc_summary[year] = perc[:,year]
+    for period in periods:
+        perc_summary[period] = perc[:,period]
    
     perc_summary.index = percentiles
     return perc_summary
@@ -38,7 +38,7 @@ def describe_scenarios_vertically(scenarios: pd.DataFrame, data_freq):
     Returns mean, standard devation, percentiles of scenarios performence: 
     annualised mean, std, skew, kurtosis, sharp ratio, maxdrawdown
     """
-    return assets_performance(scenarios, data_freq).T.describe()
+    return assets_performance(scenarios, data_freq).describe()
 
 def sample_paths(scenarios, number_of_paths=10):
     ax,fig = plt.subplots(figsize=(12,4))

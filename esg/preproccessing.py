@@ -51,8 +51,13 @@ def annualised_mean(returns, data_freq='m'):
     }
     return returns.mean() * periods[data_freq]
 
-def annualised_sigma(returns):
-    return returns.std() * 12**(1/2)
+def annualised_sigma(returns, data_freq='m'):
+    periods = {
+        'm': 12,
+        'q': 4,
+        'y': 1
+     }
+    return returns.std() * periods[data_freq]**(1/2)
 
 def foreign_asset_std(asset_std, currency_std, corr):
     variance = asset_std**2 + currency_std**2 + 2*corr*asset_std*currency_std
@@ -68,12 +73,26 @@ def max_drawdown(returns):
     return drawdown.min()
     
 def assets_performance(returns: pd.DataFrame, data_freq='m'):
-    func = {"Annualised Mean": lambda x: annualised_mean(x,data_freq), 
-            'Annualised Sigma': annualised_sigma,
-            'Skew': 'skew',
-            'Kurtosis': 'kurtosis',
-            'Sharp_ratio': sharp_ratio,
-            'Max drowdawn': max_drawdown
+    
+    if isinstance(returns, pd.Series):
+        stats = {"Annualised Mean": annualised_mean(returns,data_freq), 
+            'Annualised Sigma': annualised_sigma(returns, data_freq=data_freq),
+            'Skew': returns.skew(),
+            'Kurtosis': returns.kurtosis(),
+            'Sharp_ratio': sharp_ratio(returns),
+            'Max drowdawn': max_drawdown(returns)
             }
-    return returns.agg(func)
+        
+        return pd.Series(stats)
+    
+    elif isinstance(returns, pd.DataFrame):       
+        stats = {"Annualised Mean": returns.agg(annualised_mean,data_freq=data_freq), 
+            'Annualised Sigma': returns.agg(annualised_sigma, data_freq=data_freq),
+            'Skew': returns.agg('skew'),
+            'Kurtosis': returns.agg('kurtosis'),
+            'Sharp_ratio': returns.agg(sharp_ratio),
+            'Max drowdawn': returns.agg(max_drawdown)
+            }
+         
+        return pd.DataFrame(stats)
 

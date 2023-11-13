@@ -29,6 +29,11 @@ class IndependentLogNormal(stochastic_process.StochasticProcess):
 
 
 class RegimeSwitching():
+    """
+    probs: probability regime swtching, m x n matrix, 
+        m - number of regimes, 
+        n - number of regimes -1 
+    """
 
     def __init__(self, mu: np.ndarray, sigma: np.ndarray, probs: np. ndarray) -> None:
         super().__init__()
@@ -64,6 +69,11 @@ class RegimeSwitching():
         next_regime = np.argwhere(np.logical_and(r > lower_bound, r <= upper_bound))
 
         return next_regime
+    
+    def scenarios_regimes(self, current_regime, n_scenarios):
+
+        regimes = np.zeros(n_scenarios+1)
+        return regimes
 
     def random(self):
         return np.random.uniform(0,1.01)

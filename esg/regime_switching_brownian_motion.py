@@ -62,17 +62,22 @@ class RegimeSwitching():
                
         next_regime = None
         r = self.random()
-        probs = np.array(self.probs[current_regime])
+        probs = np.take(self.probs,current_regime)
         upper_bound = np.insert(probs.cumsum(),len(probs),[1])
         lower_bound = np.insert(probs.cumsum(),0,[-0.01])
                         
         next_regime = np.argwhere(np.logical_and(r > lower_bound, r <= upper_bound))
 
-        return next_regime
+        return next_regime #[0][0]
     
-    def scenarios_regimes(self, current_regime, n_scenarios):
+    def scenarios_regimes(self, current_regime, n_steps):
 
-        regimes = np.zeros(n_scenarios+1)
+        regimes = np.zeros(n_steps+1,dtype=np.int32)
+        regimes[0] = current_regime
+
+        for r in range(1, n_steps+1):
+            regimes[r] = self.next_regime(regimes[r-1])
+        
         return regimes
 
     def random(self):

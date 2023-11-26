@@ -1,12 +1,8 @@
+import unittest
 from inspect import getfullargspec
-from unittest import mock
-from esg.regime_switching_brownian_motion import IndependentLogNormal, RegimeSwitching
-import pytest
 import numpy as np
 import pandas as pd
-from unittest.mock import patch
-import unittest
-
+from independent_lognormal_model import IndependentLogNormal
 
 
 class BaseProcessMixin:
@@ -195,76 +191,3 @@ class TestIndependentLogNormal(BaseProcessMixin, unittest.TestCase):
         cls.multiple_x0 = np.full(50, 100.0)
 
   
-
-class TestRegimeSwithing():
-
-    @classmethod
-    def setup_class(cls):
-      cls.model = RegimeSwitching.example()
-      cls.single_x0 = np.array([100.0])
-      cls.multiple_x0 = np.full(50, 100.0)
-
-    test_values = [(0,0.65,0),
-                   (0,0.66,1),
-                   (1,0.061,1), 
-                   (1,0.06,0)]
-    @pytest.mark.parametrize('current_regime,random,expected_regime',test_values)
-    def test_should_return_next_regime_when_two_regimes(self,current_regime,random,expected_regime):
-                            
-        with patch('numpy.random.uniform') as mock_rand:
-            mock_rand.return_value = random
-            regime = self.model.next_regime(current_regime) 
-                      
-        assert regime == expected_regime
-
-    
-    test_values = [(0,0.54,0),
-                   (0,0.55,1),
-                   (0,0.66,1),
-                   (0,0.67,1),
-                   (1,0.25,0), 
-                   (1,0.26,1),
-                   (1,0.92,1),
-                   (1,0.93,2),
-                   ]
-    @pytest.mark.parametrize('current_regime,random,expected_regime',test_values)
-    def test_should_return_next_regime_when_three_regimes(self, current_regime,random,expected_regime):
-        
-        model = RegimeSwitching([0.01,0.02,0.03],[0.005,0.007,0.009],[[0.54,0.22],
-                                                                      [0.25,0.67],
-                                                                      [0.06,0.21]])
-            
-        with patch('numpy.random.uniform') as mock_rand:
-            mock_rand.return_value = random
-            regime = model.next_regime(current_regime)
-
-        assert regime == expected_regime
-    
-    def test_should_return_next_regime_for_multiple_scenarios(self):
-        
-        model = RegimeSwitching.example()
-            
-        with patch('numpy.random.uniform') as mock_rand:
-            mock_rand.return_value = [0.66,0.65]
-            regimes = model.next_regime([0,0])
-
-        np.testing.assert_array_equal(regimes, [1,0])
-
-    def test_should_return_series_of_regimes(self):
-
-        with patch('numpy.random.uniform') as mock_rand:
-            mock_rand.side_effect = [0.65, 0.66, 0.07]
-            regimes = self.model.scenarios_regimes(0,3)
-
-        
-        assert len(regimes) == 4
-        np.testing.assert_array_equal(regimes, [0,0,1,1])
-
-
-        
-
-
-    
-
-    
-    

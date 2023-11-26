@@ -3,26 +3,34 @@ import numpy as np
 import pandas as pd
 from preproccessing import assets_performance
 import seaborn as sns
+import preproccessing as prep
+from IPython.display import display
 
-def fanchart(hist,scenarios):
-    percentiles = np.percentile(scenarios,[1,5,25,50,75,95,99],axis=0)
-    hist_len = hist.shape[0]
-    n_steps = scenarios.shape[1] 
-    x1 = np.arange(-hist_len+1,1)
+def fanchart(scenarios, hist=None):
+    print('Fanchart')
+    percentiles = np.percentile(scenarios, [10, 15, 25, 50, 75, 85, 90],axis=0)    
+    n_steps = scenarios.shape[1]     
     x2 = np.arange(0,n_steps)
-    
     fig,ax = plt.subplots(figsize=(12,6))
-    ax.plot(x1, hist,color='red')
+
+    if (hist is not None):
+        hist_len = hist.shape[0]
+        x1 = np.arange(-hist_len+1,1)
+        ax.plot(x1, hist,color='red')
+        
+    
     ax.plot(x2, percentiles[3], color='blue')
       
     for i in range(1,4):
         ax.fill_between(x=x2,y1=percentiles[i-1],y2=percentiles[-i], color='blue', alpha=i/10)
+    
+    plt.show()
 
-def percentile_summary(scenarios, data_freq=1, years=np.array([1,2,3,5,10,15,20,50])):
-    percentiles = [1,5,25,50,75,95,99]
+def percentile_summary(scenarios, data_freq=1, years=np.array([1,3,5,10])):
+    print('Percentaile summary')
+    percentiles =  [10, 15, 25, 50, 75, 85, 90]
     perc = np.percentile(scenarios,percentiles,axis=0)
-    periods = np.array([1,2,3,5,10,15,20,50]) * data_freq
-
+    periods = years * data_freq
 
     perc_summary = pd.DataFrame({})
    
@@ -38,11 +46,41 @@ def describe_scenarios_vertically(scenarios: pd.DataFrame, data_freq):
     Returns mean, standard devation, percentiles of scenarios performence: 
     annualised mean, std, skew, kurtosis, sharp ratio, maxdrawdown
     """
+    print("Scenarios summary stats")
     return assets_performance(scenarios, data_freq).describe()
 
-def sample_paths(scenarios, number_of_paths=10):
-    ax,fig = plt.subplots(figsize=(12,4))
+def sample_paths(scenarios: pd.DataFrame, number_of_paths=7):
+    print('Sample paths')
+    fig, ax = plt.subplots(figsize=(12,4))
     number_of_scenarios = scenarios.shape[0]
     for i in np.random.randint(0,number_of_scenarios,number_of_paths):
-        sns.lineplot(data=scenarios[i])
+        #sns.lineplot(data=scenarios.iloc[i], ax=ax,x=scenarios.columns)
+        scenarios.iloc[i].plot(ax=ax)
+
+    plt.show()
+
+def histplot(scenarios, hist):
+    fig, ax = plt.subplots()
+    sns.histplot(data=scenarios.to_numpy().reshape(scenarios.shape[0]*scenarios.shape[1]),stat='probability', ax=ax, bins=64)
+    sns.histplot(data=hist, ax=ax, stat='probability', color='orange', bins=64)
+
+def show_scenarios_evaluation(scenarios, hist):
+    """
+    hist - historical retursn to compere histogram with scenarios
+    """
+    print(sample_paths(scenarios))
+
+    scenarios_cum_returns = scenarios/100
+    print(fanchart(scenarios_cum_returns))
+    
+    display(percentile_summary(scenarios_cum_returns,data_freq=12,years = np.array([1,3,5,10,20,25])))
+
+    scenarios_returns = prep.log_returns(scenarios.T)
+    display(describe_scenarios_vertically(scenarios_returns,'m'))
+
+    histplot(scenarios_returns,hist)
+
+
+
+    
     

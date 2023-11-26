@@ -7,8 +7,8 @@ import numpy as np
 def loadStooqData(ticker: str,start, frequency='d'):
     url = f'https://stooq.pl/q/d/l/?s={ticker}&i={frequency}'
     response = requests.get(url)
-    data = pd.read_csv(StringIO(response.text))
-    data.set_index('Data', inplace=True)
+    data = pd.read_csv(StringIO(response.text), index_col='Data', parse_dates=True)
+    #data.set_index('Data', inplace=True)
     data = data[start:]
     return data['Zamkniecie']
 
@@ -73,6 +73,9 @@ def max_drawdown(returns):
     return drawdown.min()
     
 def assets_performance(returns: pd.DataFrame, data_freq='m'):
+    """
+    returns: series or data frame n x m (n:number of time steps, m: numer of assets/scenarios)
+    """
     
     if isinstance(returns, pd.Series):
         stats = {"Annualised Mean": annualised_mean(returns,data_freq), 
@@ -95,4 +98,12 @@ def assets_performance(returns: pd.DataFrame, data_freq='m'):
             }
          
         return pd.DataFrame(stats)
+    
+def asset_stats(returns, periods):
+    summary = []
 
+    for period in periods:
+        summary.append(assets_performance(returns[period[0]:period[1]]))
+
+    return pd.DataFrame(data=summary, index=periods)
+    

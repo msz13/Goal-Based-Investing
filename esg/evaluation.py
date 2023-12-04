@@ -64,6 +64,13 @@ def histplot(scenarios, hist):
     sns.histplot(data=scenarios.to_numpy().reshape(scenarios.shape[0]*scenarios.shape[1]),stat='probability', ax=ax, bins=64)
     sns.histplot(data=hist, ax=ax, stat='probability', color='orange', bins=64)
 
+def plot_returns(scenarios, hist):
+    fix, axs = plt.subplots(1,2, figsize=(12,6))
+    scenario = np.random.randint(scenarios.shape[1])
+    hist.plot(ax=axs[0],title='Historical returns')
+    scenarios.iloc[:,scenario].plot(ax=axs[1], title='Scenario')
+    plt.show()
+
 def show_scenarios_evaluation(scenarios, hist):
     """
     hist - historical retursn to compere histogram with scenarios
@@ -78,6 +85,7 @@ def show_scenarios_evaluation(scenarios, hist):
     scenarios_returns = prep.log_returns(scenarios.T)
     display(describe_scenarios_vertically(scenarios_returns,'m'))
 
+    plot_returns(scenarios_returns, hist)
     histplot(scenarios_returns,hist)
 
 

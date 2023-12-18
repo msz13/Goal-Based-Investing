@@ -39,7 +39,16 @@ może caskade, jesli jest regime switching fx i łatwa będzie synchronizacja
 
 jaka jest moja teoria
 
+model fundamtentalny akcji
+equity = divident yeld + earnings growth + time varign violality/p/e ratio
 
+regime switching - target
+interpretacja fundamentalna - inna srednia dłuokresowa niz w danych, np. niższa, wynika z niższej średniej regimu rozwoju lub niższej średniej kryzsyów, większej długości okresów kryzysów
+
+hamilton switching - target 
+interpretacja fundamentalna - inna srednia dłuokresowa niz w danych, np. niższa, wynika z niższej średniej akcji lub większej volality
+
+powyższe modele nie uwzględniają wprost wartościowania, zmian p/e jak to powiązać?
 
 
 Do czytania:

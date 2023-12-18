@@ -37,7 +37,14 @@ werjsa pośrednia
 
 może caskade, jesli jest regime switching fx i łatwa będzie synchronizacja
 
-jaka jest moja teoria
+jaka jest moja teoria - boogle building block, based on fundamentals
+
+jesli cascadowy, to
+regime switching vs heston model violality
+
+| model | za | przeciw | 
+| --- | --- | --- |
+heston | chyba lepsze wyjasnienie fundamentalne, rozbicie modelu na stock return, violality, i jumps |
 
 model fundamtentalny akcji
 equity = divident yeld + earnings growth + time varign violality/p/e ratio
@@ -53,3 +60,5 @@ powyższe modele nie uwzględniają wprost wartościowania, zmian p/e jak to pow
 
 Do czytania:
 - vanguard return forecast
+
+  

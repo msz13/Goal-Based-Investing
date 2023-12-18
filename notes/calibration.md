@@ -25,6 +25,8 @@ Forecast | training |
 connging model
 - dylemat, jak oszacujemy parametry do targetu, czy korelacje resuduals obliczyc oszacowanych parametrow, czy historycznych? 
 
+constrained mle:
+- maksymalne prawdopodobienstwo podobieństwa do wyników do aktualneych (MLe) i osiągniecia target values
 
 
 

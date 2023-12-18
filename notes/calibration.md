@@ -28,6 +28,8 @@ connging model
 constrained mle:
 - maksymalne prawdopodobienstwo podobieństwa do wyników do aktualneych (MLe) i osiągniecia target values
 
+Prosty zabieg:
+- dodać rożnice między historical and target do danych
 
 
 

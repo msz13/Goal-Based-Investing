@@ -10,6 +10,10 @@ Kalibracja, z views:
 Moja inicjatywa:
 * targetowanie akcji na podstawie estymacji market expextation dla 10 lat, ale dla 20 lat z historii
 
+Dostosowanie do targetu:
+- grid seach parametru, gdy kalibracja jest najbliżej targetu
+- constrainded mle - dostosowanie parametrów likehood i targetu - chyba dotyczy dostosowania do długoletnich targetów, maximum likehood z penatly function (target - estimated)
+- wariancja 1 - np. przy regime switching - przyjęcie pewnych parametrów stałych, np. średniej, szukanie tylko pozostałych parametrów
 
 
 Targotowanie polski do innego podobnego kraju, np. hiszpania (też przechodziła modernizację, podobna wilekość)

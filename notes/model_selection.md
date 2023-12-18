@@ -4,6 +4,15 @@
 *	Oszacowanie potrzebnego kapitału
 
 
+Kroki wyboru:
+1. Czynniki ryzyka
+2. Real wordl vs market consistent
+3. Modele i parametryzacja
+4. Kalibracja
+5. Liczba scenariuszy
+6. Okres
+7. Częstotliwość
+
 
 ### 1. ESG cechy jakościowe:
 •	Current market conditons – uwzględnia aktualną sytację rynkową, np. po kryzysie nastąpi szybsze odbicie
@@ -58,7 +67,9 @@ interpretacja fundamentalna - inna srednia dłuokresowa niz w danych, np. niższ
 powyższe modele nie uwzględniają wprost wartościowania, zmian p/e jak to powiązać?
 
 
-Do czytania:
-- vanguard return forecast
+Jesli model regime switching, 
+- to czy jest różnica między total return, a risk free, equity premium, dywidend yeld
+- czy mogą być serie z różnymi modelami, np. lognorm, regresja, cir
+- czy może być seria implied premiemum i zwroty akcji
 
   

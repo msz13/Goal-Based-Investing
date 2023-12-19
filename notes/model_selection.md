@@ -83,7 +83,7 @@ minusy
 znaki zapytania
 - nie wiadomo, jak się zachowają wyniki od 1-10 lat
 - nie wiadomo jak uwzględnić time varing volality model (propozycje, volality jest mierzona w modelu var, model garch, heston model gdzie return drift wynika z modelu, a volality jest stochastyczna, regime switching) 
-- pytanie jak uwzględnić powiązania z innymi rynkami i walutą
-- 
+- pytanie jak uwzględnić powiązania z innymi rynkami i walutą (short rate trzeba odzielnie oszacowac albo dodac do modelu var, walutę mozna zrobic short rate, rynki zagraniczne regresje (albo AR model, regime switching, mozna dobrac), złoto tak samo
+
 
   

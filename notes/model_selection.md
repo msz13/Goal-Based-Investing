@@ -28,7 +28,8 @@ Jakie modele
 2. var/two elements
    1. ldi benchmark
    2. vangauard
-   3. asset - są to premie/boxy (equity premiem, stopa, inflacja) - regresja do macro dla tych czynnikow 
+   3. asset - są to premie/boxy (equity premiem, stopa, inflacja) - regresja do macro dla tych czynnikow
+   4. two step vanguard model 
 
 ### 2. Wybór modelu
 
@@ -71,5 +72,18 @@ Jesli model regime switching,
 - to czy jest różnica między total return, a risk free, equity premium, dywidend yeld
 - czy mogą być serie z różnymi modelami, np. lognorm, regresja, cir
 - czy może być seria implied premiemum i zwroty akcji
+
+
+#Two step vanguard model:
+plusy
+- fajny model, ale pozwala na predykcję 10 plus
+- podoba mi się poprzez założenia filozoficzne, uwzględnie valuation
+minusy
+- mmożliwa do zastosowania tylko w developed world, gdzie jest wiele danych, wskaźniki oszacowano z okresu 33 lat
+znaki zapytania
+- nie wiadomo, jak się zachowają wyniki od 1-10 lat
+- nie wiadomo jak uwzględnić time varing volality model (propozycje, volality jest mierzona w modelu var, model garch, heston model gdzie return drift wynika z modelu, a volality jest stochastyczna, regime switching) 
+- pytanie jak uwzględnić powiązania z innymi rynkami i walutą
+- 
 
   

@@ -88,6 +88,8 @@ znaki zapytania
    - walutę mozna zrobic short rate, albo PPP
    - rynki zagraniczne regresje (albo AR model, regime switching, mozna dobrac)
    - złoto tak samo, wybrac model (GBM z korelacja resyduw, regresja, regresja ar, regime switching)
+   - akcje pln ?? - regresja, ale tylko premium? (mozna zrobic gdy usa premium to stock prediction - short rate)
+   - pln inflation i rate - correlated intercepts, albo var 
 
-
+ale podstawowe pytanie, czy model caskadowy jednoczynnikowy, czy osadzony w realiach makro?
   

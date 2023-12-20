@@ -12,6 +12,7 @@ Moja inicjatywa:
 
 Dostosowanie do targetu:
 - grid seach parametru, gdy kalibracja jest najbliżej targetu
+- optymalizacja - minmilalizacja różnicy między modelem a targetem z constrained parameters z bounderies z baye estimation, np. jesli mean volatility w confidenve interval 50% jest 0.01 - 0.03 - to to są constraindes!!!
 - constrainded mle - dostosowanie parametrów likehood i targetu - chyba dotyczy dostosowania do długoletnich targetów, maximum likehood z penatly function (target - estimated)
 - wariancja 1 - np. przy regime switching - przyjęcie pewnych parametrów stałych, np. średniej, szukanie tylko pozostałych parametrów
 

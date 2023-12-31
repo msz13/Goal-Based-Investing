@@ -28,6 +28,7 @@ def fanchart(scenarios, hist=None):
 
 def percentile_summary(scenarios, data_freq=1, years=np.array([1,3,5,10])):
     print('Percentaile summary')
+    
     percentiles =  [10, 15, 25, 50, 75, 85, 90]
     perc = np.percentile(scenarios,percentiles,axis=0)
     periods = years * data_freq
@@ -80,7 +81,7 @@ def show_scenarios_evaluation(scenarios, hist):
     scenarios_cum_returns = scenarios/100
     print(fanchart(scenarios_cum_returns))
     
-    display(percentile_summary(scenarios_cum_returns,data_freq=12,years = np.array([1,3,5,10,20,25])))
+    display(percentile_summary(scenarios_cum_returns,data_freq=12,years = np.array([1,3,5,10,20])))
 
     scenarios_returns = prep.log_returns(scenarios.T)
     display(describe_scenarios_vertically(scenarios_returns,'m'))

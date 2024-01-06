@@ -1,8 +1,8 @@
 # Optymalizacja-portfela
 
 1. [Implementation of Goal Based Investing](model) solution based on:
-   - [`Dynamic Portfolio Allocation in Goals-Based Wealth Management``](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3211951)
-   - [Dynamic Optimization for Multi-Goals-Based Wealth Management](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3462795) 
+   - ["Dynamic Portfolio Allocation in Goals-Based Wealth Managemen" paper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3211951)
+   - ["Dynamic Optimization for Multi-Goals-Based Wealth Management" paper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3462795) 
 2. [Economic scenarios geerators](esg)
    - Custom libraries:
         - [scenarios evaluation](esg/evaluation.py)

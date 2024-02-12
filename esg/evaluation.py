@@ -8,7 +8,7 @@ from IPython.display import display
 
 def fanchart(scenarios, hist=None):
     print('Fanchart')
-    percentiles = np.percentile(scenarios, [10, 15, 25, 50, 75, 85, 90],axis=0)    
+    percentiles = np.percentile(scenarios, [1,5, 10, 15, 25, 50, 75, 85, 90, 95, 99],axis=0)    
     n_steps = scenarios.shape[1]     
     x2 = np.arange(0,n_steps)
     fig,ax = plt.subplots(figsize=(12,6))
@@ -29,7 +29,7 @@ def fanchart(scenarios, hist=None):
 def percentile_summary(scenarios, data_freq=1, years=np.array([1,3,5,10])):
     print('Percentaile summary')
     
-    percentiles =  [10, 15, 25, 50, 75, 85, 90]
+    percentiles =  [1, 5, 10, 15, 25, 50, 75, 85, 90, 95, 99]
     perc = np.percentile(scenarios,percentiles,axis=0)
     periods = years * data_freq
 
@@ -81,10 +81,10 @@ def show_scenarios_evaluation(scenarios, hist):
     scenarios_cum_returns = scenarios/100
     print(fanchart(scenarios_cum_returns))
     
-    display(percentile_summary(scenarios_cum_returns,data_freq=12,years = np.array([1,3,5,10,20])))
-
+    display(percentile_summary(scenarios_cum_returns, data_freq=1, years = np.array([1,3,5,10,20,30])))
+ 
     scenarios_returns = prep.log_returns(scenarios.T)
-    display(describe_scenarios_vertically(scenarios_returns,'m'))
+    display(describe_scenarios_vertically(scenarios_returns,'y'))
 
     plot_returns(scenarios_returns, hist)
     histplot(scenarios_returns,hist)

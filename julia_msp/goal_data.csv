@@ -9,4 +9,4 @@ t;minimum_limit;acceptable_limit;desired_limit;inflows;minimum_utility;acceptabl
 8;0;0;0;6;20;10;5;0,01
 9;0;0;0;6;20;10;5;0,01
 10;0;0;0;6;20;10;5;0,01
-11;110;134;155;6;20;10;5;0,01
+11;110;134;155;0;20;10;5;0,01

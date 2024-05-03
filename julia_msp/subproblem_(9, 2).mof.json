@@ -33,19 +33,13 @@
       "name": "consumption"
     },
     {
-      "name": "minimum"
-    },
-    {
       "name": "acceptable"
     },
     {
       "name": "desired"
     },
     {
-      "name": "above_desired"
-    },
-    {
-      "name": "x14"
+      "name": "x12"
     }
   ],
   "objective": {
@@ -54,24 +48,16 @@
       "type": "ScalarAffineFunction",
       "terms": [
         {
-          "coefficient": -6.0,
-          "variable": "minimum"
-        },
-        {
-          "coefficient": -3.0,
+          "coefficient": -2.0,
           "variable": "acceptable"
         },
         {
-          "coefficient": -2.0,
+          "coefficient": -1.0,
           "variable": "desired"
         },
         {
-          "coefficient": -0.06700000166893005,
-          "variable": "above_desired"
-        },
-        {
           "coefficient": 1.0,
-          "variable": "x14"
+          "variable": "x12"
         }
       ],
       "constant": 0.0
@@ -89,19 +75,11 @@
           },
           {
             "coefficient": 1.0,
-            "variable": "minimum"
-          },
-          {
-            "coefficient": 1.0,
             "variable": "acceptable"
           },
           {
             "coefficient": 1.0,
             "variable": "desired"
-          },
-          {
-            "coefficient": 1.0,
-            "variable": "above_desired"
           }
         ],
         "constant": 0.0
@@ -117,30 +95,9 @@
         "type": "ScalarAffineFunction",
         "terms": [
           {
-            "coefficient": -1.0,
-            "variable": "bonds_out"
+            "coefficient": 1.06,
+            "variable": "stocks_in"
           },
-          {
-            "coefficient": 1.0,
-            "variable": "bonds_buy"
-          },
-          {
-            "coefficient": -1.0,
-            "variable": "bonds_sell"
-          }
-        ],
-        "constant": 0.0
-      },
-      "set": {
-        "type": "EqualTo",
-        "value": 0.0
-      }
-    },
-    {
-      "name": "c3",
-      "function": {
-        "type": "ScalarAffineFunction",
-        "terms": [
           {
             "coefficient": -1.0,
             "variable": "stocks_out"
@@ -162,6 +119,35 @@
       }
     },
     {
+      "name": "c3",
+      "function": {
+        "type": "ScalarAffineFunction",
+        "terms": [
+          {
+            "coefficient": 1.03,
+            "variable": "bonds_in"
+          },
+          {
+            "coefficient": -1.0,
+            "variable": "bonds_out"
+          },
+          {
+            "coefficient": 1.0,
+            "variable": "bonds_buy"
+          },
+          {
+            "coefficient": -1.0,
+            "variable": "bonds_sell"
+          }
+        ],
+        "constant": 0.0
+      },
+      "set": {
+        "type": "EqualTo",
+        "value": 0.0
+      }
+    },
+    {
       "name": "c4",
       "function": {
         "type": "ScalarAffineFunction",
@@ -171,15 +157,27 @@
             "variable": "bonds_buy"
           },
           {
+            "coefficient": -1.0029,
+            "variable": "bonds_sell"
+          },
+          {
             "coefficient": 1.0029,
             "variable": "stocks_buy"
+          },
+          {
+            "coefficient": -1.0029,
+            "variable": "stocks_sell"
+          },
+          {
+            "coefficient": 1.0,
+            "variable": "consumption"
           }
         ],
         "constant": 0.0
       },
       "set": {
         "type": "EqualTo",
-        "value": 100.0
+        "value": 0.0
       }
     },
     {
@@ -199,7 +197,7 @@
       },
       "set": {
         "type": "EqualTo",
-        "value": 0.0
+        "value": 4.623247697922743
       }
     },
     {
@@ -275,21 +273,11 @@
     {
       "function": {
         "type": "Variable",
-        "name": "minimum"
-      },
-      "set": {
-        "type": "GreaterThan",
-        "lower": 0.0
-      }
-    },
-    {
-      "function": {
-        "type": "Variable",
         "name": "acceptable"
       },
       "set": {
         "type": "GreaterThan",
-        "lower": 0.0
+        "lower": 12.0
       }
     },
     {
@@ -305,17 +293,7 @@
     {
       "function": {
         "type": "Variable",
-        "name": "above_desired"
-      },
-      "set": {
-        "type": "GreaterThan",
-        "lower": 0.0
-      }
-    },
-    {
-      "function": {
-        "type": "Variable",
-        "name": "x14"
+        "name": "x12"
       },
       "set": {
         "type": "GreaterThan",
@@ -325,21 +303,11 @@
     {
       "function": {
         "type": "Variable",
-        "name": "minimum"
-      },
-      "set": {
-        "type": "LessThan",
-        "upper": 0.0
-      }
-    },
-    {
-      "function": {
-        "type": "Variable",
         "name": "acceptable"
       },
       "set": {
         "type": "LessThan",
-        "upper": 0.0
+        "upper": 13.0
       }
     },
     {
@@ -349,7 +317,7 @@
       },
       "set": {
         "type": "LessThan",
-        "upper": 0.0
+        "upper": 1.0
       }
     }
   ]

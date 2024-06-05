@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+
+<h3>Input Data</h3>
+
+<table>
+  <tr>
+    <th>t</td>
+    <th>minimum_limit</th>
+    <th>acceptable_limit</th>
+    <th>desired_limit</th>
+    <th>inflows</th>
+    <th>minimum_utility</th>
+    <th>desired_utility</th>
+    <th>above_desired_utility</th>    
+  </tr>
+ 
+  {{#:input_data}}
+  <tr>
+    <td>{{:t}}</td>
+    <td>{{:minimum_limit}}</td>
+    <td>{{:acceptable_limit}}</td>
+    <td>{{:desired_limit}}</td>
+    <td>{{:inflows}}</td>
+    <td>{{:minimum_utility}}</td>
+    <td>{{:desired_utility}}</td>
+    <td>{{:above_desired_utility}}</td>    
+  </tr>
+  {{/:input_data}}
+</table>
+
+<h3>Wealth</h3>
+
+<table>
+
+  <tr>
+    <th>0.05</th>
+    <th>0.25</th>
+    <th>0.5</th>
+    <th>0.75</th>
+    <th>0.95</th>
+  </tr>
+{{#:wealth}}
+  <tr>
+    <td>{{:0.05}}</td>
+    <td>{{:0.25}}</td>
+    <td>{{:0.5}}</td>
+    <td>{{:0.75}}</td>
+    <td>{{:0.95}}</td>      
+  </tr>
+  {{/:wealth}}
+</table>
+
+<h3>Stock allocation</h3>
+
+<table>
+
+  <tr>
+    <th>0.05</th>
+    <th>0.25</th>
+    <th>0.5</th>
+    <th>0.75</th>
+    <th>0.95</th>
+  </tr>
+{{#:stocks}}
+  <tr>
+    <td>{{:0.05}}</td>
+    <td>{{:0.25}}</td>
+    <td>{{:0.5}}</td>
+    <td>{{:0.75}}</td>
+    <td>{{:0.95}}</td>      
+  </tr>
+  {{/:stocks}}
+</table>
+ 
+
+
+</body>
+</html>

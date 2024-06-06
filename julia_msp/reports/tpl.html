@@ -95,7 +95,45 @@ tr:nth-child(even) {
   {{/:stocks}}
 </table>
  
+<h3>Goals success rate</h3>
 
+<table>
+
+  <tr>
+    <th>above minimum</th>
+    <th>above acceptable</th>
+    <th>above_desired</th>    
+  </tr>
+{{#:goals_succes}}
+  <tr>
+    <td>{{:above minimum}}</td>
+    <td>{{:above acceptable}}</td>
+    <td>{{:above_desired}}</td>      
+  </tr>
+  {{/:goals_succes}}
+</table>
+
+<h3>Total consumption</h3>
+
+<table>
+
+  <tr>
+    <th>0.05</th>
+    <th>0.25</th>
+    <th>0.5</th>
+    <th>0.75</th>
+    <th>0.95</th>
+  </tr>
+{{#:total_consumption}}
+  <tr>
+    <td>{{:0.05}}</td>
+    <td>{{:0.25}}</td>
+    <td>{{:0.5}}</td>
+    <td>{{:0.75}}</td>
+    <td>{{:0.95}}</td>      
+  </tr>
+  {{/:total_consumption}}
+</table>
 
 </body>
 </html>

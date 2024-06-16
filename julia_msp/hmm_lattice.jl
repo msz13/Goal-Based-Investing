@@ -9,12 +9,12 @@ function cluster_moments(data, n_clusters)
     clusters = kmeans(standarized,n_clusters)
     c = assignments(clusters)
 
-    cluster_means = zeros(2,n_clusters)
-    cluster_cov = zeros(2,2,n_clusters)
+    cluster_means = zeros(size(data)[1],n_clusters)
+    cluster_cov = zeros(size(data)[1],size(data)[1],n_clusters)
 
     for cluster in 1:n_clusters
-        cluster_means[:,cluster] = mean(period_1[:,c .== cluster],dims=2) 
-        cluster_cov[:,:,cluster] = cov(period_1[:,c .== cluster],dims=2) 
+        cluster_means[:,cluster] = mean(data[:,c .== cluster],dims=2) 
+        cluster_cov[:,:,cluster] = cov(data[:,c .== cluster],dims=2) 
     end
 
     return  cluster_means, cluster_cov 

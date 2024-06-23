@@ -1,5 +1,8 @@
 using Clustering
 using StatsBase
+using Distributions
+using TimeSeries
+using HiddenMarkovModels
 
 
 function cluster_moments(data, n_clusters)
@@ -30,15 +33,10 @@ function guess_tmatrix(n_scenarios)
     return regimes_probs ./ sum(regimes_probs,dims=2)
 end
 
-module Temp
-struct Lattice
-    likehood:: Float64
-    nodes::  Vector{Vector{Float64}}
-    probabilities
-end
-end
 
-function hmm_lattice(data, n_nodes)
+function hmm_est(returns, n_nodes)
+
+    data = transpose(values(returns))
     
     means, c_cov = cluster_moments(data,n_nodes)
 
@@ -47,7 +45,28 @@ function hmm_lattice(data, n_nodes)
     guess_matrix = guess_tmatrix(n_nodes)
     hmm_guess = HMM(init_guess, guess_matrix, guess_dist);
     hmm_est, likehood = baum_welch(hmm_guess, eachcol(data);max_iterations=200);
-    nodes = mean.(obs_distributions(hmm_est))
-    return Temp.Lattice(last(likehood), nodes, transition_matrix(hmm_est))
+    
+    return hmm_est, last(likehood)
 end
 
+#= 
+function simulate_hmm(hmm,n_steps, n_scenarios)
+    simulations = zeros(n_scenarios,n_steps)
+    for s in 1:n_scenarios
+        simulations[s,:] .= rand(hmm,n_steps)[2]
+    end
+    return simulations
+end =#
+
+function simulate_hmm(hmm, n_assets, n_steps, n_scenarios)
+    simulations = zeros(5,n_steps)
+   
+    random = rand(hmm,n_steps)[2]
+    #= for t in 1:n_steps
+        for asset in 1:n_assets
+            simulations[asset,t] = random[t][asset]
+        end
+    end =#
+    
+    return random
+end 

@@ -3,6 +3,7 @@ using StatsBase
 using Distributions
 using TimeSeries
 using HiddenMarkovModels
+using PrettyTables
 
 
 function cluster_moments(data, n_clusters)
@@ -61,12 +62,68 @@ end =#
 function simulate_hmm(hmm, n_assets, n_steps, n_scenarios)
     simulations = zeros(5,n_steps)
    
-    random = rand(hmm,n_steps)[2]
+    random = [rand(hmm,n_steps)[2] for s in 1:n_scenarios]
     #= for t in 1:n_steps
         for asset in 1:n_assets
             simulations[asset,t] = random[t][asset]
         end
-    end =#
+    end  =#
     
     return random
 end 
+
+function regime_summary(hmm,assets_names, freq)
+    
+    n_assets = length(assets_names)
+    dist = obs_distributions(hmm)
+    n_regimes = length(dist)
+
+    #Print regime means
+    means = zeros(n_regimes,n_assets)
+
+    for r in 1:n_regimes
+        for a in 1:n_assets
+            means[r,a] = mean(dist[r])[a]*freq
+        end
+    end
+    
+    println("Means")
+    pretty_table(means, 
+        backend = Val(:html), 
+        header=assets_names, 
+        show_row_number=true,
+        row_number_column_title="Regime", 
+        formatters = ft_printf("%5.3f"))
+
+    #Print regime standard deviations
+    std = zeros(n_regimes,n_assets)
+
+    for r in 1:n_regimes
+        for a in 1:n_assets
+            std[r,a] = sqrt(var(dist[r])[a]*freq)
+        end
+    end
+    
+    println("Standard deviations")
+    pretty_table(std, 
+        backend = Val(:html), 
+        header=assets_names, 
+        show_row_number=true,
+        row_number_column_title="Regime", 
+        formatters = ft_printf("%5.3f"))
+
+    #Print correlation guess_matrix
+    
+    for r in 1:n_regimes
+        display("Correlations in regime $r")
+        pretty_table(cor(dist[r]), 
+            backend = Val(:html), 
+            header=assets_names, 
+            row_labels=assets_names, 
+            formatters = ft_printf("%5.3f"))
+    end
+
+    println("Regimes transition matrix")
+    pretty_table(transition_matrix(hmm), backend = Val(:html), header = 1:n_regimes, show_row_number=true,row_number_column_title="Regime", formatters = ft_printf("%5.3f"))
+
+end

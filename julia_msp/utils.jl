@@ -31,4 +31,27 @@ function cor_returns(returns:: TimeArray)
     return pretty_table(corr,header=col, backend = Val(:html), row_labels=col)
 end
 
+function annualise(scenarios:: Matrix, shift=2)
+   
+    periods = floor.(Int, size(scenarios)[2]/shift)
+    result = zeros(size(scenarios)[1],periods)
 
+    for p in 1:periods
+        start = (p-1)*shift+1
+        en = p*shift
+        result[:,p] .= sum(scenarios[:,start:en],dims=2)
+    end 
+    return result
+   
+end
+
+
+function print_percentiles(X, perc)
+    years = size(X)[2]
+    simulation_perc = zeros(length(perc),years)
+
+    for t in 1:years
+        simulation_perc[:,t] = quantile(X[:,t],perc)
+    end
+    pretty_table(simulation_perc, backend = Val(:html),header=1:years, row_labels=perc)
+end

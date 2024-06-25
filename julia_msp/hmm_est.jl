@@ -50,26 +50,22 @@ function hmm_est(returns, n_nodes)
     return hmm_est, last(likehood)
 end
 
-#= 
-function simulate_hmm(hmm,n_steps, n_scenarios)
-    simulations = zeros(n_scenarios,n_steps)
-    for s in 1:n_scenarios
-        simulations[s,:] .= rand(hmm,n_steps)[2]
-    end
-    return simulations
-end =#
 
 function simulate_hmm(hmm, n_assets, n_steps, n_scenarios)
-    simulations = zeros(5,n_steps)
+    
    
     random = [rand(hmm,n_steps)[2] for s in 1:n_scenarios]
-    #= for t in 1:n_steps
-        for asset in 1:n_assets
-            simulations[asset,t] = random[t][asset]
+    result = zeros((n_assets,n_scenarios,n_steps))
+
+    for a in 1:n_assets
+        for s in 1:n_scenarios
+            for step in 1:n_steps
+                result[a,s,step] = random[s][step][a]
+            end
         end
-    end  =#
+    end
     
-    return random
+    return  result
 end 
 
 function regime_summary(hmm,assets_names, freq)

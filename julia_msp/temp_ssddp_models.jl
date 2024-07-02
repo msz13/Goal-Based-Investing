@@ -271,3 +271,60 @@ function asset_management_alm(data:: Temp.GoalsData3)
    #@test SDDP.calculate_bound(model) ≈ 1.514 atol = 1e-4
     return model
 end
+
+
+function asset_management_alm2(data:: Temp.GoalsData3)
+  
+    model = SDDP.PolicyGraph(
+        graph25,
+        lower_bound = -97,
+        optimizer = HiGHS.Optimizer,
+    ) do subproblem, index
+        (stage, markov_state) = index
+        r_stock = [0.8 0.9 1.01 1.14 1.28] #[0.82 0.92 1.04 1.16 1.31] #[0.72 0.95 1.26 1.67 2.21] #       
+        r_bonds = [1.015]
+        @variable(subproblem, stocks >= 0, SDDP.State, initial_value = 0.0)
+        @variable(subproblem, bonds >= 0, SDDP.State, initial_value = 0.0)
+
+        @variable(subproblem, bonds_buy >= 0)
+        @variable(subproblem, bonds_sell >= 0)
+        @variable(subproblem, stocks_buy >= 0)
+        @variable(subproblem, stocks_sell >= 0)                     
+         
+        
+        @variable(subproblem, consumption >=0)
+        
+        @variable(subproblem, 0 <= minimum<= data.minimum_limit[stage])
+        @variable(subproblem, 0 <= acceptable <= data.acceptable_limit[stage] - data.minimum_limit[stage])
+        @variable(subproblem, 0 <= desired <= data.desired_limit[stage] - data.acceptable_limit[stage])
+        @variable(subproblem, 0 <= above_desired)
+        @constraint(subproblem, minimum + acceptable + desired + above_desired == consumption)
+                     
+        if stage == 1
+            @constraint(subproblem, bonds_buy - bonds_sell == bonds.out)
+            @constraint(subproblem, stocks_buy - stocks_sell == stocks.out)
+            @constraint(subproblem, stocks_buy*(1+data.provision) + bonds_buy*(1+data.provision) + consumption == data.initial_wealth) 
+                                           
+            @stageobjective(subproblem, -(data.minimum_utility[stage] * minimum + data.acceptable_utility[stage] * acceptable + data.desired_utility[stage] * desired + data.above_desired_utility[stage] * above_desired))
+            
+        elseif 1 < stage 
+            @constraint(
+                subproblem,
+                r_stock[markov_state] * stocks.in + stocks_buy - stocks_sell== stocks.out)
+
+            @constraint(
+                subproblem,
+                r_bonds[1] * bonds.in + bonds_buy - bonds_sell== bonds.out)
+
+            @constraint(subproblem, stocks_buy*(1+data.provision) - stocks_sell*(1+data.provision) + bonds_buy*(1+data.provision) - bonds_sell*(1+data.provision) + consumption - data.inflows[stage] == 0) 
+
+            @stageobjective(subproblem, -(data.minimum_utility[stage] * minimum + data.acceptable_utility[stage] * acceptable + data.desired_utility[stage] * desired + data.above_desired_utility[stage] * above_desired))
+        
+        end
+    end
+    SDDP.train(model; iteration_limit = 1200, log_frequency = 50)
+    
+   #@test SDDP.calculate_bound(model) ≈ 1.514 atol = 1e-4
+    return model
+end
+

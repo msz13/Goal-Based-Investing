@@ -28,14 +28,24 @@ using Distributions
         return NormalWishartBVARmodel(Y, X, C, S, df, missing, missing)
     end
 
-    function sample_posterior!(model :: NormalWishartBVARmodel)
-        Sigma = rand(InverseWishart(model.df,model.S_OLS),5)
-        model.Σ = Sigma
+    function sample_posterior!(model :: NormalWishartBVARmodel, n_samples, burnin)
+        posterior_beta = zeros(n_samples+burnin,20)
+        posterior_sigma = zeros(n_samples+burnin, 4, 4)
 
-        Beta_mean = vec(model.C_OLS)
-        Beta_var = kron(model.Σ[1],inv(transpose(model.X) * model.X))
-        Beta = rand(MvNormal(Beta_mean,Beta_var),5)
-        model.Β = Beta
+       
+        for n in 1:n_samples+burnin
+
+            posterior_sigma[n,:,:] = rand(InverseWishart(model.df,model.S_OLS))
+
+            Beta_mean = vec(model.C_OLS)
+            Beta_var = kron(posterior_sigma[n,:,:],Hermitian(inv(transpose(model.X) * model.X)))
+            posterior_beta[n,:,:] = rand(MvNormal(Beta_mean,Hermitian(Beta_var)))
+        
+        end               
+       
+        model.Β = posterior_beta[burnin+1:end,:]
+        model.Σ = posterior_sigma[burnin+1:end,:,:]
+        
     end
 
 end

@@ -4,7 +4,7 @@ using Distributions
 
     using LinearAlgebra
 
-    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!
+    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, simulate
 
     mutable struct NormalWishartBVARmodel
         const Y:: AbstractArray
@@ -48,4 +48,31 @@ using Distributions
         
     end
 
+    
+    mutable struct VARModel
+        const Y:: AbstractArray
+        const X:: AbstractArray
+        const C:: AbstractArray
+        const Σ:: AbstractArray
+                
+    end
+
+    function VARModel(data)
+        p = 1   #lag
+        T,n  = size(data)
+        Y = data[p+1:end,:]
+        X = hcat(ones(T-1), data[p:end-1,:])
+        C = inv(transpose(X) * X) * transpose(X) * Y
+        S = transpose((Y - X*C)) * (Y - X*C)
+       
+        return VARModel(Y, X, C, S)
+    end
+    
+    function simulate(model::VARModel,n_steps::Int64)
+        return
+    end
+
+
 end
+
+

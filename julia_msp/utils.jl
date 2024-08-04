@@ -46,12 +46,12 @@ function annualise(scenarios:: Matrix, shift=2)
 end
 
 
-function print_percentiles(X, perc)
+function print_percentiles(X, perc, title="")
     years = size(X)[2]
     simulation_perc = zeros(length(perc),years)
 
     for t in 1:years
         simulation_perc[:,t] = quantile(X[:,t],perc)
     end
-    pretty_table(simulation_perc, backend = Val(:html),header=1:years, row_labels=perc)
+    pretty_table(simulation_perc, backend = Val(:html),header=1:years, row_labels=perc, title=title)
 end

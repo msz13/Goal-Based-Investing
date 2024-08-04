@@ -1,10 +1,13 @@
 module FinancialBVAR
 
-using Distributions
-
+    using Distributions
     using LinearAlgebra
+    using .FinancialBVAR
+    using PrettyTables
+    using TimeSeries
+    using StatsBase
 
-    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, simulate
+    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, model_summary
 
     mutable struct NormalWishartBVARmodel
         const Y:: AbstractArray
@@ -50,6 +53,7 @@ using Distributions
 
     
     mutable struct VARModel
+        const var_names:: Vector
         const Y:: AbstractArray
         const X:: AbstractArray
         const C:: AbstractArray
@@ -57,19 +61,54 @@ using Distributions
                 
     end
 
-    function VARModel(data)
+    function VARModel(data::TimeArray)
         p = 1   #lag
-        T,n  = size(data)
-        Y = data[p+1:end,:]
-        X = hcat(ones(T-1), data[p:end-1,:])
+        val = values(data)
+        T,n  = size(val)
+        Y = val[p+1:end,:]
+        X = hcat(ones(T-1), val[p:end-1,:])
         C = inv(transpose(X) * X) * transpose(X) * Y
-        S = transpose((Y - X*C)) * (Y - X*C)
+        S = transpose((Y - X*C)) * (Y - X*C) / (T- n -1)
        
-        return VARModel(Y, X, C, S)
+        return VARModel(colnames(data), Y, X, C, S) 
+    end
+
+    function drift(C,X)
+        X = vcat(ones(1),X)
+        return C * X 
+    end
+
+    function model_summary(model)
+        std = sqrt.(diag(model.Σ))
+        var_summary = round.(hcat(transpose(model.C),std),digits=4)
+        pretty_table(var_summary; backend = Val(:html), header=string.([:const; model.var_names; :std]), row_labels=model.var_names, title="Coefficients")
+
+        cor = cov2cor(model.Σ,std)
+        pretty_table(round.(cor,digits=2);backend = Val(:html), header=string.(model.var_names), row_labels=model.var_names, title="Residuals correlations")
+
     end
     
-    function simulate(model::VARModel,n_steps::Int64)
+    """
+        simulate(mode,n_steps,n_scenarios)
+
         return
+        result[n_variables,n_scenarios,n_steps]
+    """
+    function simulate(model, n_steps::Int64, n_scenarios=10_000)
+        n = size(model.Y)[2]
+        result = zeros(n, n_scenarios,n_steps+1)
+        C = transpose(model.C)
+
+        result[:,:,1] = repeat(model.Y[end,:],n_scenarios)
+
+        for t in 2:n_steps+1
+            for s in 1:n_scenarios
+                result[:,s,t] = rand(MvNormal(drift(C,result[:,s,t-1]),model.Σ),)
+            end
+        end
+
+        return result
+
     end
 
 

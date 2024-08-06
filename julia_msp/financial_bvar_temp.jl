@@ -6,10 +6,12 @@ module FinancialBVAR
     using PrettyTables
     using TimeSeries
     using StatsBase
+    using MCMCChains
 
-    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, model_summary
+    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, model_summary, posterior_summary
 
     mutable struct NormalWishartBVARmodel
+        const var_names:: Vector
         const Y:: AbstractArray
         const X:: AbstractArray
         const C_OLS:: AbstractArray
@@ -19,16 +21,17 @@ module FinancialBVAR
         Β:: Union{AbstractArray,Missing} 
     end
 
-    function NormalWishartBVAR(data)
+    function NormalWishartBVAR(data:: TimeArray)
         p = 1   #lag
-        T,n  = size(data)
+        val = values(data)
+        T,n  = size(val)
         df = T -1 - n
-        Y = data[p+1:end,:]
-        X = hcat(ones(T-1), data[p:end-1,:])
+        Y = val[p+1:end,:]
+        X = hcat(ones(T-1), val[p:end-1,:])
         C = inv(transpose(X) * X) * transpose(X) * Y
         S = transpose((Y - X*C)) * (Y - X*C)
        
-        return NormalWishartBVARmodel(Y, X, C, S, df, missing, missing)
+        return NormalWishartBVARmodel(colnames(data),Y, X, C, S, df, missing, missing)
     end
 
     function sample_posterior!(model :: NormalWishartBVARmodel, n_samples, burnin)
@@ -50,6 +53,29 @@ module FinancialBVAR
         model.Σ = posterior_sigma[burnin+1:end,:,:]
         
     end
+
+    function posterior_summary(model:: NormalWishartBVARmodel)
+        
+        n = length(model.var_names)
+
+        full_var_names = string.(["const"; model.var_names])
+
+        for i in 1:n
+            display(string(model.var_names[i]) * " coefficients")
+            chn = Chains(model.Β[:,i*(n+1)-n:i*(n+1)],full_var_names)
+            df = quantile(chn)
+            display(df)
+        end  
+        
+        cov_names = [string.(model.var_names[j]) * "_" * string.(model.var_names[i]) for j in 1:n for i in 1:n]
+              
+       cov_chn = Chains(reshape(model.Σ,(10000,16)), cov_names)
+
+       display("cov matrix")
+       display(quantile(cov_chn))
+
+    end
+
 
     
     mutable struct VARModel

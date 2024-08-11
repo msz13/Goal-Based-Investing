@@ -8,7 +8,7 @@ module FinancialBVAR
     using StatsBase
     using MCMCChains
 
-    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, model_summary, posterior_summary
+    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, model_summary, posterior_summary, cov2cor_posterior
 
     mutable struct NormalWishartBVARmodel
         const var_names:: Vector
@@ -69,11 +69,59 @@ module FinancialBVAR
         
         cov_names = [string.(model.var_names[j]) * "_" * string.(model.var_names[i]) for j in 1:n for i in 1:n]
               
-       cov_chn = Chains(reshape(model.Σ,(10000,16)), cov_names)
+       #cov_chn = Chains(reshape(model.Σ,(10000,16)), cov_names)
 
-       display("cov matrix")
-       display(quantile(cov_chn))
+       corr_matrix = cov2cor_posterior(model.Σ)
+       cor_chn = Chains(reshape(corr_matrix,(10000,16)), cov_names)
+       display("correlation matrix")
+       display(quantile(cor_chn))
 
+    end
+
+    function cov2cor_posterior(cov_matrix)
+        s,n, _ = size(cov_matrix)
+        corr_matrix = zeros(s,n,n)
+        
+
+        for i in 1:s
+            sigmas = sqrt.(diag(cov_matrix[i,:,:]))
+            corr_m = cov2cor(cov_matrix[i,:,:])
+            corr_m[diagind(corr_m)] .= sigmas
+            corr_matrix[i,:,:] = corr_m
+           
+        end
+
+        return corr_matrix
+
+    end
+
+    """
+    d: number of scenarias per posterior sample
+
+    """
+    function simulate(model:: NormalWishartBVARmodel, n_steps:: Int, d:: Int)
+        n = size(model.Y)[2]
+        posterior_size = size(model.Β)[1]
+        n_scenarios = d * posterior_size
+        T = n_steps + 1
+        result = zeros(n, n_scenarios, T)
+
+        result[:,:,1] = repeat(model.Y[end,:],n_scenarios)
+
+        C = reshape(model.Β, posterior_size, n+1, n)
+
+        for p in 1:posterior_size
+            for t in 2:T
+                for s in 1:d
+                    n = p*d-d+s
+                    dr = drift(transpose(C[p,:,:]), result[:,n,t-1])
+                    result[:,n,t] .= rand(MvNormal(dr,model.Σ[p]))
+                end
+            end
+        end   
+          
+
+        return result
     end
 
 

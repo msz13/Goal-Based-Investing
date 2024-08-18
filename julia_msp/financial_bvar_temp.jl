@@ -8,7 +8,8 @@ module FinancialBVAR
     using StatsBase
     using MCMCChains
 
-    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, model_summary, posterior_summary, cov2cor_posterior
+    export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, posterior_summary, cov2cor_posterior
+    export VARModel, model_summary
 
     mutable struct NormalWishartBVARmodel
         const var_names:: Vector
@@ -35,8 +36,9 @@ module FinancialBVAR
     end
 
     function sample_posterior!(model :: NormalWishartBVARmodel, n_samples, burnin)
-        posterior_beta = zeros(n_samples+burnin,20)
-        posterior_sigma = zeros(n_samples+burnin, 4, 4)
+        T,n = size(model.Y)
+        posterior_beta = zeros(n_samples+burnin,n*(n+1))
+        posterior_sigma = zeros(n_samples+burnin, n, n)
 
        
         for n in 1:n_samples+burnin
@@ -72,7 +74,8 @@ module FinancialBVAR
        #cov_chn = Chains(reshape(model.Σ,(10000,16)), cov_names)
 
        corr_matrix = cov2cor_posterior(model.Σ)
-       cor_chn = Chains(reshape(corr_matrix,(10000,16)), cov_names)
+       n_samples, n_cov_variables = size(model.Σ)
+       cor_chn = Chains(reshape(corr_matrix,(n_samples, n_cov_variables * n_cov_variables)), cov_names)
        display("correlation matrix")
        display(quantile(cor_chn))
 
@@ -118,9 +121,8 @@ module FinancialBVAR
                     result[:,n,t] .= rand(MvNormal(dr,model.Σ[p]))
                 end
             end
-        end   
+        end  
           
-
         return result
     end
 

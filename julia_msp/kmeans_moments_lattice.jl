@@ -21,25 +21,35 @@ end
 
 mutable struct Lattice
     states:: Array{Float64,3}
+    probs:: Array{Matrix{Float64},1}
 end
+
+
+
 
 function generate_lattice(scenarios:: Array{Float64,3}, n_nodes, n_stages)
 
-    s = sum(scenarios[:,:,21:25]; dims=3)
-    s = dropdims(s; dims= 3)
-
+   
     n = 3 # number of assets
     
     states =zeros(n_stages,n_nodes,n)
-    probablities = []
+    assignments = zeros_
+    probablities = Array{Float64,2}[[1.0]']
 
-    states_one, clusters = cluster(s,n_nodes)
-    probs = clusters_probs(clusters)
+    for t in 1:n_stages
+        stage_states, clusters_assignments = cluster(scenarios[:,:,1],n_nodes)
+        states[t,:,:] .= stage_states
+    end
 
-    states[1,:,:] .= states_one
-    append!(probablities,probs)
+    
+    #probs = clusters_probs(clusters)
 
-    return Lattice(states), probablities
+    
+    #push!(probablities,probs')
+
+    
+
+    return Lattice(states, probablities)
 
 
 end

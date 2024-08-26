@@ -341,8 +341,7 @@ function asset_management_alm_save(data:: Temp.GoalsData3)
         inflation = 0.025
         r_stock = [0.8 0.9 1.01 1.14 1.28] #[0.82 0.92 1.04 1.16 1.31] #[0.72 0.95 1.26 1.67 2.21] #       
         r_bonds = [1.015 + inflation]
-        
-        #cpi = vcat([1], cumprod(ones(25) .+ 0.025))
+                
 
         @variable(subproblem, stocks >= 0, SDDP.State, initial_value = 0.0)
         @variable(subproblem, bonds >= 0, SDDP.State, initial_value = 0.0)

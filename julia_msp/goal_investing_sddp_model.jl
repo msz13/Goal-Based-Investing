@@ -3,7 +3,7 @@ module GoalInvestingSDDP
 using SDDP, HiGHS, Plots, XLSX, Mustache, PrettyTables
 #= include("kmeans_moments_lattice.jl")
 using .LatticeGeneration =#
-export GoalsData3, asset_management_alm
+export GoalsData3, asset_management_alm, Optimiasation_Result, describe_result
 
 
 struct GoalsData3
@@ -75,6 +75,51 @@ function asset_management_alm(data:: GoalsData3, scenario_lattice)
        
        #@test SDDP.calculate_bound(model) ≈ 1.514 atol = 1e-4
         return model
+end
+
+struct Optimistion_Result
+    lower_bound:: Float64
+    confidence_interval_mu:: Float64
+    confidence_interval_ci:: Float64
+    consumption_dist:: Array{Float64, 2}
+end
+
+function describe_result(model)
+
+    simulations = SDDP.simulate(
+    # The trained model to simulate.
+    model,
+    # The number of replications.
+    2000,
+    # A list of names to record the values of.
+    [:assets, :minimum, :acceptable, :desired, :above_desired, :consumption],
+    skip_undefined_variables=true
+)
+
+    lb =  round(SDDP.calculate_bound(model), digits=4)
+
+    objectives = map(simulations) do simulation
+        return sum(stage[:stage_objective] for stage in simulation)
+    end
+
+    μ, ci = round.(SDDP.confidence_interval(objectives), digits=4)
+
+    n_scenarios = 2000
+    n_stages = 16
+    n_assets = 3
+
+    consumption = zeros(n_scenarios,n_stages)
+    assets = zeros(n_assets,n_scenarios,n_stages)
+
+    for (i, scenario) in enumerate(simulations)
+        consumption[i,:] = [node[:consumption] for node in scenario]
+        for a in 1:3
+            assets[a,i,:] = [node[:assets][a].out for node in scenario]
+        end
+    end
+    
+    return Optimistion_Result(lb, μ, ci, consumption)
+
 end
     
 end

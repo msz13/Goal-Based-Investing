@@ -3,7 +3,7 @@ module GoalInvestingSDDP
 using SDDP, HiGHS, Plots, XLSX, Mustache, PrettyTables
 #= include("kmeans_moments_lattice.jl")
 using .LatticeGeneration =#
-export GoalsData3, asset_management_alm, Optimiasation_Result, describe_result
+export GoalsData3, asset_management_alm, Optimiasation_Result, simulate_policy, print_report
 
 
 struct GoalsData3
@@ -81,10 +81,11 @@ struct Optimistion_Result
     lower_bound:: Float64
     confidence_interval_mu:: Float64
     confidence_interval_ci:: Float64
-    consumption_dist:: Array{Float64, 2}
+    consumption_dist:: Matrix{Float64}  
+    assets_dist:: Array{Float64, 3}
 end
 
-function describe_result(model)
+function simulate_policy(model)
 
     simulations = SDDP.simulate(
     # The trained model to simulate.
@@ -105,21 +106,56 @@ function describe_result(model)
     μ, ci = round.(SDDP.confidence_interval(objectives), digits=4)
 
     n_scenarios = 2000
-    n_stages = 16
+    n_stages = 6
     n_assets = 3
 
     consumption = zeros(n_scenarios,n_stages)
-    assets = zeros(n_assets,n_scenarios,n_stages)
+    assets_d = zeros(n_assets,n_scenarios,n_stages)
 
     for (i, scenario) in enumerate(simulations)
         consumption[i,:] = [node[:consumption] for node in scenario]
         for a in 1:3
-            assets[a,i,:] = [node[:assets][a].out for node in scenario]
+            assets_d[a,i,:] = [node[:assets][a].out for node in scenario]
         end
     end
     
-    return Optimistion_Result(lb, μ, ci, consumption)
+    return Optimistion_Result(lb, μ, ci, consumption, assets_d)
 
+end
+
+function calculate_perc(data, perc = [0.05, 0.25, 0.5, 0.75, 0.95])
+    n_scenarios, n_stages = size(data)
+    
+    result = zeros(n_stages, length(perc)) 
+
+    for t in 1:n_stages
+       result[t,:] = quantile(data[:,t], perc)
+    end
+
+    return DataFrame(round.(result,digits=2),string.(perc))
+  
+end
+
+#= function print_sddp_report(template::String, input_data::DataFrame, wealth::DataFrame, stocks::DataFrame, goals_succes::DataFrame, total_consumption::DataFrame, report_name::String)
+
+    tpl = open(io->read(io, String), template)
+    
+    report = Mustache.render(tpl, TITLE="A quick table", input_data=input_data, wealth=wealth, stocks=stocks, goals_succes=goals_succes, total_consumption=total_consumption)
+  
+    report_path = "c:\\Users\\matsz\\programowanie\\Optymalizacja_portfela\\julia_msp\\reports\\$(report_name).html"
+    write(report_path, report)
+  
+    run(`$(ENV["COMSPEC"]) /c start $(report_path)`)
+   
+  end =#
+  
+  #print_sddp_report("c:\\Users\\matsz\\programowanie\\Optymalizacja_portfela\\julia_msp\\reports\\tpl.html", data, wealth_perc, stocks_weight_perc, goals_succes, total_consumption_perc, "test_30.06.24_nominal_rates")
+
+function print_report(result:: Optimistion_Result, input_data, tpl_path)
+
+    tpl = open(io->read(io, String), tpl_path)
+    report = Mustache.render(tpl, TITLE="A quick table", input_data=input_data, result)
+    return report
 end
     
 end

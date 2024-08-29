@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+
+<h3>Input Data</h3>
+
+<table>
+  <tr>
+    <th>t</td>
+    <th>minimum_limit</th>
+    <th>acceptable_limit</th>
+    <th>desired_limit</th>
+    <th>inflows</th>
+    <th>minimum_utility</th>
+    <th>desired_utility</th>
+    <th>above_desired_utility</th>    
+  </tr>
+ 
+  {{#:input_data}}
+  <tr>
+    <td>{{:t}}</td>
+    <td>{{:minimum_limit}}</td>
+    <td>{{:acceptable_limit}}</td>
+    <td>{{:desired_limit}}</td>
+    <td>{{:inflows}}</td>
+    <td>{{:minimum_utility}}</td>
+    <td>{{:desired_utility}}</td>
+    <td>{{:above_desired_utility}}</td>    
+  </tr>
+  {{/:input_data}}
+</table>
+
+<!-- <h3>Optimisation result</h3>
+{{#optimisation_result}}
+<div>Lower bound: {{lower_bound}}</div>
+<div>confidence_interval_mu: {{confidence_interval_mu}}</div>
+<div>confidence_interval_ci: {{confidence_interval_ci}}</div> -->
+
+</body>
+</html>

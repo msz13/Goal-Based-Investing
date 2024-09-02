@@ -106,7 +106,7 @@ function simulate_policy(model)
     μ, ci = round.(SDDP.confidence_interval(objectives), digits=4)
 
     n_scenarios = 2000
-    n_stages = 6
+    n_stages = 16
     n_assets = 3
 
     consumption = zeros(n_scenarios,n_stages)

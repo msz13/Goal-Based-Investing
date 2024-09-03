@@ -15,13 +15,15 @@ using Test
 end
 
 @testset "Bond returns for scenarios" begin
-   scenarios = [0.01 0.02 0.025; 0.03 0.025 0.01]
-   expected = [-0.0849 -0.04123; 0.0476 0.1555]
-   M = 10
-   dt = 12
+   scenarios1 = [0.01 0.02 0.025; 0.03 0.025 0.01]
+   scenarios2 = [0.01 0.01 0.01; 0.03 0.03 0.03]
+   expected1 = [-0.0849 -0.04123; 0.0476 0.1555]
+   expected2 = [0.005 0.005; 0.015 0.015]
 
-   @test size(scenarios_bond_returns(scenarios, M, dt)) == (2,2)
-   @test scenarios_bond_returns(scenarios, M, dt) ≈ expected atol = 0.001
+   @test size(scenarios_bond_returns(scenarios1, 10, 12)) == (2,2)
+
+   @test scenarios_bond_returns(scenarios1, 10, 12) ≈ expected1 atol = 0.001
+   @test scenarios_bond_returns(scenarios2,10, 2) ≈ expected2 atol = 0.001
 
 end
    

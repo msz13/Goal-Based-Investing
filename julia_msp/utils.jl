@@ -1,6 +1,6 @@
 using StatsBase
 using PrettyTables
-using TimeArray
+using TimeSeries
 
 
 function returns_summarystats(data::TimeArray,t)

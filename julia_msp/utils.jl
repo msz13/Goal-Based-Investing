@@ -56,6 +56,6 @@ function print_percentiles(X, perc, title="")
     for t in 1:years
         simulation_perc[:,t] = quantile(X[:,t],perc)
     end
-    pretty_table(raund.(simulation_perc, digits=4), backend = Val(:html),header=1:years, row_labels=perc, title=title)
+    pretty_table(round.(simulation_perc, digits=4), backend = Val(:html),header=1:years, row_labels=perc, title=title)
 end
 

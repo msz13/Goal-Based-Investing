@@ -394,5 +394,3 @@ function asset_management_alm_save(data:: Temp.GoalsData3)
     return model
 end
 
-
-

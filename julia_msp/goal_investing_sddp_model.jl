@@ -29,7 +29,7 @@ function asset_management_alm(data:: GoalsData3, scenario_lattice)
         ) do subproblem, index
             (stage, markov_state) = index
 
-            n_assets = 3           
+            n_assets = 2           
                   
             assets_returns = scenario_lattice.states           
            
@@ -107,14 +107,14 @@ function simulate_policy(model)
 
     n_scenarios = 2000
     n_stages = 16
-    n_assets = 3
+    n_assets = 2
 
     consumption = zeros(n_scenarios,n_stages)
     assets_d = zeros(n_assets,n_scenarios,n_stages)
 
     for (i, scenario) in enumerate(simulations)
         consumption[i,:] = [node[:consumption] for node in scenario]
-        for a in 1:3
+        for a in 1:n_assets
             assets_d[a,i,:] = [node[:assets][a].out for node in scenario]
         end
     end

@@ -40,20 +40,63 @@ function generate_coeffs(Β0, sp, ν0, ν1, h)
 end
 
 
+"""
+μ: mean of Volatility
+ρ: autoregresive coeff of volatility
+"""
+function drawStochVolatility(h0, μ, ρ, ξ, h)
+    i = length(μ)
+    result = zeros(i, h+1)
+    result[:,1] = h0
 
+    for t in 2:(h+1)
+        result[:,t] = μ .+ ρ .* (result[:,t-1] - μ) + rand(MvNormal(zeros(i), diagm(ξ)))
+    end
 
-function step(x, Βtm1, p, ν0,  ν1, htm1, SVparams)
-    n_variables = 1
-
-    s = rand(Bernoulli(p))
-    Θ = s*ν1 + (1-s)*ν0
-    Β = Βtm1 + rand(Normal(0, Θ))
-
-    h = SVparams.μ + SVparams.ρ * (htm1 - SVparams.μ)
-
-    σ = 0.1
-
-    y = rand(Normal(x * Β, σ))
-
-    return y
+    return result
 end
+
+
+
+function sample(h)
+
+    result = zeros(i, h)
+   
+    #coeff = generate_coeffs()
+    σ2 = 0.09
+
+
+
+
+    
+end
+
+#= 
+function posterior()
+
+
+    Β0 = drawBeta0()
+
+    Β = drawΒ() #FFBS algorythm
+
+    ν = drawν()
+
+    κ = drawκ() #hyperparameter
+
+    λ = drawλ() #hyperparameter
+
+    d = drawd() #threshold parameter
+
+end
+ =#
+
+ residuals(Y, X, Β) = Y .- Β .* X 
+
+ k_gain(P_predicted, X, Σ) =  P_predicted * X' \ (X^2 * P_predicted + Σ) 
+ 
+#= 
+ function kalmanFilter(X, Β0, P0, Σ, ν)
+    T = length(X)
+    
+
+ end =#

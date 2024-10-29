@@ -90,7 +90,7 @@ function posterior()
 end
  =#
 
- residuals(Y, X, Β) = Y .- Β .* X 
+ residuals(Y, X, Β) = Y .- Β * X 
 
  k_gain(P_predicted, X, Σ) =  P_predicted * X' * inv(X * P_predicted * X' .+ Σ)
  

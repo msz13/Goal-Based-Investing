@@ -20,23 +20,26 @@ h: number of perios
 
 """
 function generate_coeffs(Β0, sp, ν0, ν1, h)
-    j = length(Β0)
+    i, j = size(Β0)
+   
 
-    result = zeros(j,h+1)
-    result[:,1] = Β0
-
+    result = zeros(h+1, i, j)
+    result[1, :, :] = Β0
+    
+    
     for t in 2:(h+1)
-        s = [rand(Bernoulli(p)) for p in sp] 
-        Θ = [s[i]*ν1[i] + (1-s[i])*ν0[i] for i in 1:j] 
-    
-        V = diagm(Θ) * Matrix(I, j, j)
-       
-        result[:,t] = result[:, t-1] .+ rand(MvNormal(zeros(j), V),1)
 
-    end
-    
-    return result[:,2:end]
+        s = map(p -> rand(Bernoulli(p)), sp) #draw if time varing
+        Θ = map(x -> x[2]*ν1[x[1]] + (1-x[2])*ν0[x[1]], enumerate(s)) #coefficient volatility 
 
+        vol = map(x -> rand(Normal(0, x)), Θ) #draw coeficeint innovation
+
+        result[t, :, : ] = result[t-1, :, :] + vol       
+
+    end 
+    
+    return result[2:end, :, :]
+    
 end
 
 
@@ -56,18 +59,31 @@ function drawStochVolatility(h0, μ, ρ, ξ, h)
     return result
 end
 
+struct TTVAR_Result
+
+    sp
+    ν0
+    ν1
+    Σ
+
+end
 
 
-function sample(h)
+function sample(X1:: Matrix, Β0:: Matrix, params:: TTVAR_Result, h)
 
-    result = zeros(i, h)
-   
-    #coeff = generate_coeffs()
-    σ2 = 0.09
+    i = length(X1)
+    result = zeros(i, h+1)
+    result[:,1] = X1 
 
+    Β = generate_coeffs(Β0, params.sp, params.ν0, params.ν1, h)
 
+    for t in 2:h+1
+        drift = Β[t] * vec(result[:,t-1]) 
+        result[:,t] .=  rand(MvNormal(drift, params.Σ))
+    end
+  
 
-
+    return result
     
 end
 
@@ -94,9 +110,29 @@ end
 
  k_gain(P_predicted, X, Σ) =  P_predicted * X' * inv(X * P_predicted * X' .+ Σ)
  
-
- function kalmanFilter(X, Β0, P0, Σ, ν)
-    T = length(X)
+function kalman_step(Sm1, Pm1, Y, X, Σ, Q)
     
+    #predict state
+    S = Sm1
+    P1 = Pm1 +  Q
+
+    F = X * P1 * X' + Σ  #state transision
+    K = P1 * X' * inv(F) # kalman gain
+
+    res = Y .- S * X #residuals
+
+    Β_f = S + K * res #Beta measurement
+    P_f = P1 - K * X * P1 #covariance measurmenet
+
+end
+
+
+ function kalmanFilter(X, Y, Β0, P0, Σ, ν)
+    T,i = size(X)
+    
+    S_filtered = zeros(T, i)
+    P_filtered = zeros(T, i)
+    
+    return S_filtered, P_filtered
 
  end 

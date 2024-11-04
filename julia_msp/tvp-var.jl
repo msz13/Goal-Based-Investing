@@ -124,15 +124,26 @@ function kalman_step(Sm1, Pm1, Y, X, Σ, Q)
     Β_f = S + K * res #Beta measurement
     P_f = P1 - K * X * P1 #covariance measurmenet
 
+    return Β_f, P_f
+
 end
 
 
  function kalmanFilter(X, Y, Β0, P0, Σ, ν)
     T,i = size(X)
     
-    S_filtered = zeros(T, i)
-    P_filtered = zeros(T, i)
-    
+    S_filtered = zeros(T+1, i,i)
+    P_filtered = zeros(T+1, i, i)
+
+    S_filtered[1,:,:] .= Β0
+    P_filtered[1,:,:] .= P0
+
+    for t in 2:T+1
+
+        S_filtered[t,:,:], P_filtered[t,:,:] = kalman_step(S_filtered[t-1,:,:], P_filtered[t-1,:,:], Y[t-1,:], X[t-1,:,:], Σ, ν)
+
+    end  
+     
     return S_filtered, P_filtered
 
  end 

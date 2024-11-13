@@ -127,32 +127,28 @@ function kalman_step(Sm1, Pm1, Y, X, Σ, Q)
 
 end
 
-residuals(Y, X, Β) = Y .- Β ⋅ X 
-k_gain(X, P1, Σ) = P1 * X' *  inv(X * P1 * X' + Σ)
-update_state(S1, K, res) = S1 .+ (K * res)'
-update_cov(P1, K, X) = P1 - K'*X'*P1 
+residuals(Y, X, Β) = Y .- X * Β 
+measurement_cov(X, P1, Σ) = X * P1 * X' .+ Σ
+k_gain(X, P1, S) = P1 * X' ./ S
+update_state(S1, K, res) = S1 .+ K * res
+update_cov(P1, K, X) = P1 - K * X * P1 
 
 
 
-function kalman_step2(Sm1:: Matrix{Float64}, Pm1:: Matrix{Float64}, Y:: Float64, X:: Matrix{Float64}, Σ:: Vector{Float64}, Q:: Matrix{Float64})
+function kalman_step2(Sm1:: Vector{Float64}, Pm1:: Matrix{Float64}, Y:: Float64, X:: Vector{Float64}, Σ:: Float64, Q:: Matrix{Float64})
     
+    X = X'
     #predict state
     S1 = Sm1
     P1 = Pm1 +  Q
 
-    F = X * P1 * X' + Σ  
-    K = P1 * X' *  inv(F)
+    S = measurement_cov(X, P1, Σ)
+    K = k_gain(X, P1, S)
+    res = residuals(Y,X,S1)
+    Β_f = update_state(S1, K, res)
+    P_f = update_cov(P1, K, X)
 
-    
-    res =  Y .- X * S1' #residuals 
-   
-
-    Β_f =  S1 + K * res #Beta measurement Update state S +
-
-    
-    #P_f = P1 - K * X * P1 #covariance measurmenet  
-
-    return K #Β_f, P_f
+    return Β_f, P_f
 
 end
 

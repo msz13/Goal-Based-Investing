@@ -69,17 +69,17 @@ struct TTVAR_Result
 end
 
 
-function sample(X1:: Matrix, Β0:: Matrix, params:: TTVAR_Result, h)
+function sample(X1:: Matrix, coef::Array{Float64,3}, σ, h)
 
     i = length(X1)
     result = zeros(i, h+1)
     result[:,1] = X1 
 
-    Β = generate_coeffs(Β0, params.sp, params.ν0, params.ν1, h)
-
+    Β = coef
+    
     for t in 2:h+1
         drift = Β[t] * vec(result[:,t-1]) 
-        result[:,t] .=  rand(MvNormal(drift, params.Σ))
+        result[:,t] .=  rand(MvNormal(drift, σ))
     end
   
 
@@ -108,24 +108,6 @@ end
 
  
 
- 
-function kalman_step(Sm1, Pm1, Y, X, Σ, Q)
-    
-    #predict state
-    S = Sm1
-    P1 = Pm1 +  Q
-
-    #= F = X * P1 * X' + Σ  #state transision
-    K = P1 * X' * inv(F) # kalman gain
-
-    res = Y .- S * X #residuals
-
-    Β_f = S + K * res #Beta measurement
-    P_f = P1 - K * X * P1 #covariance measurmenet =#
-
-    return P1 #Β_f, P_f
-
-end
 
 residuals(Y, X, Β) = Y .- X * Β 
 measurement_cov(X, P1, Σ) = X * P1 * X' .+ Σ
@@ -152,25 +134,6 @@ function kalman_step2(Sm1:: Vector{Float64}, Pm1:: Matrix{Float64}, Y:: Float64,
 
 end
 
-function kalmanFilter(X, Y, Β0, P0, Σ, ν)
-    T,i = size(X)
-    
-    S_filtered = zeros(T+1, i, i)
-    P_filtered = zeros(T+1, i, i)
-
-    S_filtered[1,:,:] .= Β0
-    P_filtered[1,:,:] .= P0
-
-    for t in 2:T+1
-
-        S_filtered[t,:,:], P_filtered[t,:,:] = kalman_step(S_filtered[t-1,:,:], P_filtered[t-1,:,:], Y[t-1,:], X[t-1,:,:], Σ, ν)
-
-    end  
-     
-    return S_filtered, P_filtered
-
- end 
-
 
  function kalmanFilter2(X, Y, Β0, P0, Σ, ν)
     T,i = size(X)
@@ -182,8 +145,11 @@ function kalmanFilter(X, Y, Β0, P0, Σ, ν)
     P_filtered[1,:,:] = P0
 
    for t in 2:T+1
-        
-        S_filtered[t,:], P_filtered[t,:] .= kalman_step(S_filtered[t-1,:], P_filtered[t-1, :, :], Y[t-1], X[t-1,:], Σ, ν)
+     S = S_filtered[t-1,:]
+     P = P_filtered[t-1, :, :]
+     Yt = Y[t-1]
+     Xt =  X[t-1,:]  
+     S_filtered[t,:], P_filtered[t,:, :] = kalman_step2(S, P, Yt, Xt, Σ, ν)
 
     end  
      
@@ -191,18 +157,35 @@ function kalmanFilter(X, Y, Β0, P0, Σ, ν)
 
  end 
 
-function smoother(S_filtered, P_filtered)
+ smooth_state(Sp1:: Vector{Float64}, S_filtered:: Vector{Float64}, P_filtered:: Matrix{Float64}, ν:: Matrix{Float64}) = S_filtered +  P_filtered * inv((P_filtered + ν)) * (Sp1 - S_filtered)
+ smooth_cov(P_filtred:: Matrix{Float64}, ν:: Matrix{Float64}) = P_filtred - P_filtred * inv(P_filtred + ν) * P_filtred
 
-    T, i, j = size(S_filtered)
-    S = zeros(T, i, j)
-    P = zeros(T, i, j)
+function simulation_smoother(S_filtered, P_filtered, ν)
 
-    S[end, :, :] .= rand(MvNormal(S_filtered[end, :, :], P_filtered[end, :, :])) 
-    P[end, :, :] .= P_filtered[end, :, :]
+    T, i = size(S_filtered)
+    S = zeros(T, i)
     
-    S[end-1,:, :] .= 
+    S[end, :] .= rand(MvNormal(S_filtered[end, :], P_filtered[end, :, :])) 
     
+    for t in T-1:-1:1
+    
+        S_smoothed = smooth_state(S[t+1, :], S_filtered[t, :], P_filtered[t, :, :], ν)
+        P_smoothed = smooth_cov(P_filtered[t, :, :], ν)
+        
+        S[t, :] = S_smoothed + vec(randn(1,i) * cholesky(Hermitian(P_smoothed), check=false).L) #rand(MvNormal(S_smoothed, Hermitian(P_smoothed)))
+
+    end
  
-    return S, P
+    return S
 
 end
+
+function carter_kohn(X, Y, B0, P0, σ, ν)
+
+    S_filtered, P_filtered = kalmanFilter2(X, Y, B0, P0, σ, ν)
+    draws = simulation_smoother(S_filtered, P_filtered, ν)
+
+    return draws
+
+end
+    

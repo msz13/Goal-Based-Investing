@@ -19,13 +19,31 @@ function likehood_t(y, X, Β, Σ)
 
 end
 
-function hamilton_filter(y, X, Β, Σ, transition_matrix, states_zero)
+function hamilton_step(y, X, Β, Σ, transition_matrix, states_zero)
 
     s = next_regime(states_zero, transition_matrix)
-    η = likehood_t(y,X, Β, Σ)
+    η = likehood_t(y, X, Β, Σ)
+    
     probs = η .* s 
+   
+    return return probs / sum(probs)
+    
+end
 
-    return probs / sum(probs)
+
+function hamilton_filter(Y, X, Β, Σ, transition_matrix, states_zero)
+
+    T = size(Y)[1]
+    n_states = length(states_zero)
+    result = zeros(T, n_states)
+
+    result[1,:] = hamilton_step(Y[1,:], X[1,:], Β, Σ, transition_matrix, states_zero)
+    
+    for t in 2:T
+        result[t,:] = hamilton_step(Y[t,:], X[t,:], Β, Σ, transition_matrix, result[t-1, :])
+    end
+  
+    return return result
     
 end
 

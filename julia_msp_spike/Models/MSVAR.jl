@@ -4,10 +4,8 @@ using Distributions
 
 export hamilton_filter
 
-function next_regime(previous_probs, transition_matrix)
 
-    return transition_matrix' * previous_probs
-end
+next_regime(previous_probs, transition_matrix) = transition_matrix' * previous_probs
 
 
 function likehood_t(y, X, Β, Σ)

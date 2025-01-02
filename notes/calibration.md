@@ -38,3 +38,4 @@ Prosty zabieg:
 
 
 
+dsd

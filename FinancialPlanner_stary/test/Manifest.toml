@@ -1,0 +1,16 @@
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.11.2"
+manifest_format = "2.0"
+project_hash = "d02882e628530d49cc54ee647f522ba8fd023693"
+
+[[deps.Cassette]]
+git-tree-sha1 = "f8764df8d9d2aec2812f009a1ac39e46c33354b8"
+uuid = "7057c7e9-c182-5462-911a-8362d720325c"
+version = "0.3.14"
+
+[[deps.SimpleMock]]
+deps = ["Cassette"]
+git-tree-sha1 = "ac20f2bd4772bfbcf884329464f24a26eecacdb9"
+uuid = "a896ed2c-15a5-4479-b61d-a0e88e2a1d25"
+version = "1.2.1"

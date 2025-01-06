@@ -4,7 +4,7 @@ next_regime(previous_probs, transition_matrix) = transition_matrix' * previous_p
 function likehood_t(y, X, Β, Σ)
     
     k = length(Β)
-    result = [pdf(MvNormal(vec(X' * Β[s]), Σ[s]), y) for s in 1:k]
+    result = [pdf(MvNormal(vec(Β[s] * X), Σ[s]), y) for s in 1:k]
 
     return result
 
@@ -38,33 +38,22 @@ function hamilton_filter(Y, X, Β, Σ, transition_matrix, states_zero)
     
 end
 
-smooth_step(St1T, St1, St, transition_matrix) = transition_matrix * (St1T ./ St1) .* St
+smooth_step(St1T, St1, St, transition_matrix) = (transition_matrix' * (St1T ./ St1)) .* St
 
-"""
-#p: lag 
+function smoother(regime_probs, transition_matrix)
 
-result = MSBVAR(Y, p, n_regimes, n_burning, n_draw, intercept_switching=true, coef_switching=true, covariance_switching=true)
+    result = zeros(size(regime_probs))
+    T = size(regime_probs)[1]
 
+    result[end,:] = regime_probs[end,:]
 
-result.B[1][1].B0
-result.B[1].
+    for t in T-1:-1:1
+        result[t,:] = smooth_step(result[t+1,:],regime_probs[t+1,:], regime_probs[t,:], transition_matrix)
+    end
 
-reult:
-sample, regime, var struct
-result, param, sample
+    return result
 
-"""
-
-"""
-model: fitted MSVAR model
-X0: current data
-S0: current regimes probilities
-n_steps: number of steps
-n_scenarios: number of n_scenarios
-
-simulated = simulate(model,X0, S0, n_steps,n_scenarios)
-
-"""
+end
 
 
 

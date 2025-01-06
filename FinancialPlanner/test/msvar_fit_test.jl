@@ -1,7 +1,8 @@
 using Test #, StatsBase
-
+using Revise
 includet("../src/ESGModels/ESGModels.jl")
-using .ESGModels
+#includet("../src/ESGModels/msvar.jl")
+#using .ESGModels
 using StatsBase
 
 
@@ -74,9 +75,18 @@ end
 
     transition_matrix = [.9 .1;.2 .8]
     
-    result = ESGModels.smooth_step(St1T, St1, St, transition_matrix)
+    result = smooth_step(St1T, St1, St, transition_matrix)
     
-    @test result ≈ [.929, .081] atol=0.001
+    @test result ≈ [.996, .071] atol=0.001
+
+    regime_probs = [.8 .2; .7 .3 ; .65 .35]
+
+    result = smoother(regime_probs, transition_matrix)
+
+    @test size(result) == (3,2)
+    @test result[end,:] == [.65, .35]
+    @test result[end-1,:] == smooth_step([.65, .35], [.65, .35], [.7, .3], transition_matrix)
+   
 
 end
 

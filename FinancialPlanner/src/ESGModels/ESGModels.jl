@@ -2,9 +2,12 @@ module ESGModels
 
 export hamilton_filter
 
-using Distributions
+
+using Distributions, StatsBase
 
 
 include("MSVAR.jl")
+
+include("msvar_simulate.jl")
 
 end

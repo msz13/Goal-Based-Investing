@@ -69,15 +69,14 @@ end
 
 @testset "Smoother" begin
 
-    St = [.9, .1]
-    St1 = [.8, .2]
+    St = [.9, .1]    
     St1T = [.85, .15]
 
     transition_matrix = [.9 .1;.2 .8]
     
-    result = smooth_step(St1T, St1, St, transition_matrix)
+    result = smooth_step(St1T, St, transition_matrix)
     
-    @test result ≈ [.996, .071] atol=0.001
+    @test result ≈ [.909, .091] atol=0.001
 
     regime_probs = [.8 .2; .7 .3 ; .65 .35]
 
@@ -85,7 +84,7 @@ end
 
     @test size(result) == (3,2)
     @test result[end,:] == [.65, .35]
-    @test result[end-1,:] == smooth_step([.65, .35], [.65, .35], [.7, .3], transition_matrix)
+    @test result[end-1,:] == smooth_step([.65, .35], [.7, .3], transition_matrix)
    
 
 end

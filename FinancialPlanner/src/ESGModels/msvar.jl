@@ -38,7 +38,7 @@ function hamilton_filter(Y, X, Β, Σ, transition_matrix, states_zero)
     
 end
 
-smooth_step(St1T, St1, St, transition_matrix) = (transition_matrix' * (St1T ./ St1)) .* St
+smooth_step(Stp1T, St, transition_matrix) = (transition_matrix * (Stp1T ./ next_regime(St, transition_matrix))) .* St
 
 function smoother(regime_probs, transition_matrix)
 
@@ -48,7 +48,7 @@ function smoother(regime_probs, transition_matrix)
     result[end,:] = regime_probs[end,:]
 
     for t in T-1:-1:1
-        result[t,:] = smooth_step(result[t+1,:],regime_probs[t+1,:], regime_probs[t,:], transition_matrix)
+        result[t,:] = smooth_step(result[t+1,:], regime_probs[t,:], transition_matrix)
     end
 
     return result

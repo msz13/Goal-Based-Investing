@@ -4,4 +4,7 @@ module FinancialPlanner
 
 include("ESGModels/ESGModels.jl")
 
+
+export ESGModels
+
 end

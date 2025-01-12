@@ -2,7 +2,7 @@ using Test #, StatsBase
 using Revise
 includet("../src/ESGModels/ESGModels.jl")
 #includet("../src/ESGModels/msvar.jl")
-#using .ESGModels
+using .ESGModels
 using StatsBase
 
 
@@ -89,4 +89,19 @@ end
 
 end
 
+@testset "regime_params" begin
+    
+    Y = [.16 .05; .13 .045; .07 .03; .08 .035; .11 .04]
 
+    X = [1. .12 .06; 1. .16 .05; 1. .13 .045; 1. .07 .03; 1. .11 .04]
+
+    regimes_probs = [.9 .1; .8 .2; .7 .3; .7 .3; .8 .2]
+
+    @test calc_xhat(X, regime_probs) ≈ [0.9487 0.1138 0.0569;
+                                        0.8944 0.1431 0.0447;
+                                        0.8367 0.1088 0.0376;
+                                        0.8367 0.0586 0.0251;
+                                        0.8944 0.0984 0.0358]
+
+    #@test calc_regime_coeficientents(Y, X, regime_probs) ≈ [0.0196873 0.0283806; -0.187316 -0.0301025; 2.83093 0.458406]
+end

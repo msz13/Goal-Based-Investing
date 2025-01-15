@@ -94,15 +94,30 @@ function est_regimes_params(Y, X, regimes_probs)
 
 end
 
-function est_transition_matrix(regimes_probs, initial_regimes_probs)
+function joined_regimes_probs(regime_probs, smoothed_probs, states_zero, transition_matrix)
 
-    s = sum(regimes_probs, dims=1)
-    k = kron([1, 1], s[1,:])
-    k2 = [kron(initial_regimes_probs, regimes_probs[1,:]), kron(regimes_probs[1,:], regimes_probs[2,:]), kron(regimes_probs[2,:], regimes_probs[3,:])]
-    k2sum = sum(k2, dims=1)[1]
+    T, n = size(regime_probs)
+    result = zeros(T, n^2)
 
-    tm = k2sum ./ k
-    tm = reshape(tm, (2,2))
+    result[1,:] = vec(transition_matrix) .* (kron(smoothed_probs[1,:] ./ regime_probs[1,:], states_zero))
 
-    return tm
+    for t in 1:T-1
+        result[t+1,:] = vec(transition_matrix) .* (kron(smoothed_probs[t+1,:] ./ regime_probs[t+1,:], regime_probs[t, :]))
+    end
+    
+    return result
+
 end
+
+function est_transition_matrix(joined_regimes_probs, regimes_probs, initial_regimes_probs)
+
+    s = sum(regimes_probs[1:end-1,:], dims=1)[1,:] + initial_regimes_probs
+
+    k = kron([1, 1], s)
+
+    e_tm = sum(joined_regimes_probs, dims=1)[1,:] ./ k
+    e_tm = reshape(e_tm, 2, 2)
+ 
+    return e_tm
+end
+

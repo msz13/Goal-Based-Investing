@@ -121,3 +121,70 @@ function est_transition_matrix(joined_regimes_probs, regimes_probs, initial_regi
     return e_tm
 end
 
+#TODO usunać z ta jak będziemy zaczytywać module
+function est_expected_regimes(initial_regimes_probs, transition_matrix, T)
+    
+    result = zeros(T, length(initial_regimes_probs))
+
+    result[1,:] = next_regime(initial_regimes_probs, transition_matrix)
+
+    for t in 2:T 
+        result[t,:] = next_regime(result[t-1,:], transition_matrix)
+    end
+
+    return result
+
+end 
+
+function log_likehood(Y, X, Β, Σ, transition_matrix, states_zero)
+
+    T = size(Y,1)
+    likehoods = zeros(size(Y,1))
+
+    er = expected_regimes(states_zero, transition_matrix, T)
+
+    likehoods[1] = likehood_t(Y[1,:], X[1,:], Β, Σ)' * er[1, :]
+
+    for t in 2:T
+        likehoods[t] = likehood_t(Y[t,:], X[t,:], Β, Σ)' * er[t-1, :]
+    end
+
+    return sum(log.(likehoods))
+
+end
+
+function initial_regimes_probs(transition_matrix)
+
+    P = transition_matrix
+    N = size(P, 1)
+        
+    # Construct the matrix A for solving Ax = b where x is π
+    A = [P' - I; ones(1, N)]
+
+    b = [zeros(N); 1.0]
+        
+    # Solve for π using backslash operator (Gaussian elimination)
+    π = A \ b
+
+    return π
+
+end
+
+struct MSVARResult
+    regimes
+    smoothed_regimes
+    transition_matrix
+    Β
+    Σ  
+end
+
+function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, regimes_zero, n_iterations)
+
+    regimes = hamilton_filter(Y,X, Β, Σ, transition_matrix, regimes_zero)
+    smoothed_regimes = smoother(regimes, transition_matrix)
+    t_m = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, regimes_zero, transition_matrix), regimes, regimes_zero)
+    Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)
+    #init_regimes =  initial_regimes_probs(t_m)
+
+    return MSVARResult(regimes, smoothed_regimes, t_m, Β_est, Σ_est) 
+end

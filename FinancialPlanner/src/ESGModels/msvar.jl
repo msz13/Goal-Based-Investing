@@ -178,13 +178,13 @@ struct MSVARResult
     Σ  
 end
 
-function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, regimes_zero, n_iterations)
+function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, n_iterations)
 
-    regimes = hamilton_filter(Y,X, Β, Σ, transition_matrix, regimes_zero)
+    init_regimes =  initial_regimes_probs(transition_matrix)
+    regimes = hamilton_filter(Y,X, Β, Σ, transition_matrix, init_regimes)
     smoothed_regimes = smoother(regimes, transition_matrix)
-    t_m = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, regimes_zero, transition_matrix), regimes, regimes_zero)
+    t_m = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, transition_matrix), regimes, init_regimes)
     Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)
-    #init_regimes =  initial_regimes_probs(t_m)
-
+    
     return MSVARResult(regimes, smoothed_regimes, t_m, Β_est, Σ_est) 
 end

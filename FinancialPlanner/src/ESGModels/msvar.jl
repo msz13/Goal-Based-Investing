@@ -34,7 +34,7 @@ function hamilton_filter(Y, X, Β, Σ, transition_matrix, states_zero)
         result[t,:] = hamilton_step(Y[t,:], X[t,:], Β, Σ, transition_matrix, result[t-1, :])
     end
   
-    return return result
+    return return result .+ 1e8
     
 end
 
@@ -175,16 +175,23 @@ struct MSVARResult
     smoothed_regimes
     transition_matrix
     Β
-    Σ  
+    Σ
+    likehoods
 end
 
 function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, n_iterations)
 
-    init_regimes =  initial_regimes_probs(transition_matrix)
-    regimes = hamilton_filter(Y,X, Β, Σ, transition_matrix, init_regimes)
-    smoothed_regimes = smoother(regimes, transition_matrix)
-    t_m = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, transition_matrix), regimes, init_regimes)
+    P = transition_matrix
+    Β_est = Β
+    Σ_est = Σ
+    likehoods = zeros(n_iterations)
+
+    init_regimes =  initial_regimes_probs(P)
+    regimes = hamilton_filter(Y,X, Β_est, Σ_est, P, init_regimes)
+    smoothed_regimes = smoother(regimes, P)
+    P = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, P), regimes, init_regimes)
     Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)
+    likehoods = log_likehood(Y, X, Β_est, Σ_est, P, init_regimes)
     
-    return MSVARResult(regimes, smoothed_regimes, t_m, Β_est, Σ_est) 
+    return MSVARResult(regimes, smoothed_regimes, P, Β_est, Σ_est, likehoods) 
 end

@@ -4,7 +4,7 @@ next_regime(previous_probs, transition_matrix) = transition_matrix' * previous_p
 function likehood_t(y, X, Β, Σ)
     
     k = length(Β)
-    result = [pdf(MvNormal(vec(Β[s] * X), Σ[s]), y) for s in 1:k]
+    result = [pdf(MvNormal(vec(Β[s] * X), Hermitian(Σ[s])), y) for s in 1:k]
 
     return result
 
@@ -34,7 +34,7 @@ function hamilton_filter(Y, X, Β, Σ, transition_matrix, states_zero)
         result[t,:] = hamilton_step(Y[t,:], X[t,:], Β, Σ, transition_matrix, result[t-1, :])
     end
   
-    return return result .+ 1e8
+    return return result .+ 1e-12
     
 end
 
@@ -86,7 +86,7 @@ function est_regimes_params(Y, X, regimes_probs)
 
         Σ = calc_cov_matrix(U, regime_matrix)
 
-        push!(coef, Β)
+        push!(coef, Β')
         push!(covm, Σ)
     end
 
@@ -149,7 +149,7 @@ function log_likehood(Y, X, Β, Σ, transition_matrix, states_zero)
         likehoods[t] = likehood_t(Y[t,:], X[t,:], Β, Σ)' * er[t-1, :]
     end
 
-    return sum(log.(likehoods))
+    return sum(log.(Complex.(likehoods)))
 
 end
 
@@ -185,13 +185,18 @@ function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, n_iteratio
     Β_est = Β
     Σ_est = Σ
     likehoods = zeros(n_iterations)
+    regimes = nothing
+    smoothed_regimes = nothing
 
-    init_regimes =  initial_regimes_probs(P)
-    regimes = hamilton_filter(Y,X, Β_est, Σ_est, P, init_regimes)
-    smoothed_regimes = smoother(regimes, P)
-    P = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, P), regimes, init_regimes)
-    Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)
-    likehoods = log_likehood(Y, X, Β_est, Σ_est, P, init_regimes)
+    for i in 1:n_iterations
+        init_regimes =  initial_regimes_probs(P)
+        regimes = hamilton_filter(Y,X, Β_est, Σ_est, P, init_regimes)
+        smoothed_regimes = smoother(regimes, P)
+        P = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, P), regimes, init_regimes)
+        Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)
+        likehoods[i] = log_likehood(Y, X, Β_est, Σ_est, P, init_regimes)
+    end
+    
     
     return MSVARResult(regimes, smoothed_regimes, P, Β_est, Σ_est, likehoods) 
 end

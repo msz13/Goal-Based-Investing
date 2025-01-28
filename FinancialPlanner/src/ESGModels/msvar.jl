@@ -13,9 +13,9 @@ end
 function hamilton_step(y, X, Β, Σ, transition_matrix, states_zero)
 
     s = next_regime(states_zero, transition_matrix)
-    η = likehood_t(y, X, Β, Σ)
+    η = likehood_t(y, X, Β, Σ) 
     
-    probs = η .* s 
+    probs = η .* s .+ 1e-12 
    
     return return probs / sum(probs)
     
@@ -34,7 +34,7 @@ function hamilton_filter(Y, X, Β, Σ, transition_matrix, states_zero)
         result[t,:] = hamilton_step(Y[t,:], X[t,:], Β, Σ, transition_matrix, result[t-1, :])
     end
   
-    return return result .+ 1e-12
+    return return result 
     
 end
 
@@ -102,20 +102,21 @@ function joined_regimes_probs(regime_probs, smoothed_probs, states_zero, transit
     result[1,:] = vec(transition_matrix) .* (kron(smoothed_probs[1,:] ./ regime_probs[1,:], states_zero))
 
     for t in 1:T-1
-        result[t+1,:] = vec(transition_matrix) .* (kron(smoothed_probs[t+1,:] ./ regime_probs[t+1,:], regime_probs[t, :]))
+        result[t+1,:] = vec(transition_matrix) .* (kron(smoothed_probs[t+1,:] ./ next_regime(regime_probs[t, :], transition_matrix), regime_probs[t, :]))
     end
     
     return result
 
 end
 
-function est_transition_matrix(joined_regimes_probs, regimes_probs, initial_regimes_probs)
+function est_transition_matrix(joined_regimes_probs)
 
-    s = sum(regimes_probs[1:end-1,:], dims=1)[1,:] + initial_regimes_probs
+    sum_jr = sum(joined_regimes_probs, dims=1)[1,:]
 
-    k = kron([1, 1], s)
+    ξ1 = kron(ones(2)', Matrix(I, 2, 2)) * sum_jr
 
-    e_tm = sum(joined_regimes_probs, dims=1)[1,:] ./ k
+    e_tm = sum_jr ./ kron(ones(2), ξ1)
+
     e_tm = reshape(e_tm, 2, 2)
  
     return e_tm
@@ -187,13 +188,14 @@ function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, n_iteratio
     likehoods = zeros(n_iterations)
     regimes = nothing
     smoothed_regimes = nothing
+    
 
     for i in 1:n_iterations
         init_regimes =  initial_regimes_probs(P)
         regimes = hamilton_filter(Y,X, Β_est, Σ_est, P, init_regimes)
         smoothed_regimes = smoother(regimes, P)
-        P = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, P), regimes, init_regimes)
-        Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)
+        P = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, P))
+        Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)        
         likehoods[i] = log_likehood(Y, X, Β_est, Σ_est, P, init_regimes)
     end
     

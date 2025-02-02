@@ -154,7 +154,7 @@ function log_likehood(Y, X, Β, Σ, transition_matrix, states_zero)
 
 end
 
-function initial_regimes_probs(transition_matrix)
+function unconditional_regimes(transition_matrix)
 
     P = transition_matrix
     N = size(P, 1)
@@ -188,14 +188,15 @@ function expectation_maximisation(Y, X, k, Β, Σ, transition_matrix, n_iteratio
     likehoods = zeros(n_iterations)
     regimes = nothing
     smoothed_regimes = nothing
-    
+    init_regimes =  unconditional_regimes(P)
 
     for i in 1:n_iterations
-        init_regimes =  initial_regimes_probs(P)
+        
         regimes = hamilton_filter(Y,X, Β_est, Σ_est, P, init_regimes)
         smoothed_regimes = smoother(regimes, P)
         P = est_transition_matrix(joined_regimes_probs(regimes, smoothed_regimes, init_regimes, P))
-        Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes)        
+        Β_est, Σ_est = est_regimes_params(Y,X, smoothed_regimes) 
+        init_regimes = smooth_step(smoothed_regimes[1,:], unconditional_regimes(P), P)      
         likehoods[i] = log_likehood(Y, X, Β_est, Σ_est, P, init_regimes)
     end
     

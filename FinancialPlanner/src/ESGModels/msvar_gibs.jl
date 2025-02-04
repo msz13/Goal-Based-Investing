@@ -70,3 +70,21 @@ function sample_covariance(Y, X, Β, regimes, k)
     return result
     
 end
+
+function sample_betas(Y,X,regimes, posterior_sigmas, k)
+
+    n_variables = size(Y,2)
+    result = zeros(k, n_variables+1, n_variables)
+
+    for r in 1:k
+        Ym = filter_X(Y, regimes, r)
+        Xm = filter_X(X, regimes, r)
+        Beta_mean = inv(Xm' * Xm) * Xm' * Ym
+        Beta_var = kron(Hermitian(inv(Xm'* Xm)), posterior_sigmas[r,:,:])
+        Βm = rand(MvNormal(vec(Beta_mean), Beta_var))
+        result[r,:,:]  = reshape(Βm, n_variables+1, n_variables)
+    end
+    
+    return result
+
+end

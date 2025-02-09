@@ -25,6 +25,7 @@ end
 
 function count_regime_transitions(regimes, k)
 
+    T = size(regimes, 1)
     result = zeros(k, k)
 
     for t in 1:T-1
@@ -54,7 +55,8 @@ filter_X(X, regimes, regime) = X[regimes .== regime, :]
 function sample_covariance(Y, X, Β, regimes, k)
 
     n_variables = size(Y,2)
-    result = zeros(k, n_variables, n_variables)
+    #result = zeros(k, n_variables, n_variables)
+    result = []
 
     for r in 1:k
         Ym = filter_X(Y, regimes, r)
@@ -63,8 +65,9 @@ function sample_covariance(Y, X, Β, regimes, k)
         U = calc_residuals(Ym,Xm, Β[r]')
         μ = 1/Tm * U' * U
         ν = Tm-k-1
-        result[r,:,:] =  rand(InverseWishart(ν, μ))
+        #result[r,:,:] =  rand(InverseWishart(ν, μ))
         #result[r,:,:] = μ
+        push!(result, rand(InverseWishart(ν, μ)))
     end   
 
     return result
@@ -86,5 +89,36 @@ function sample_betas(Y,X,regimes, posterior_sigmas, k)
     end
     
     return result
+
+end
+
+function msvar(Y, X, transition_matrix0, Β0, Σ0, n_burn, n_samples)
+
+    T = size(Y, 1) 
+    n = n_burn + n_samples
+    k = 2 # n_regimes
+    states = zeros(Int64, n, T)
+    t_m = zeros(n, 2, 2)
+
+    states_zero = unconditional_regimes(transition_matrix0)
+    states[1, :] = simulate_regimes(Y, X, Β0, Σ0, transition_matrix0, states_zero)
+    
+    cov_sample = [sample_covariance(Y, X, Β0, states[1,:], k)]
+
+    t_m[1, :, :] = sample_transition_matrix(states[1, :], k)
+
+    #Β_sample = zeros(n_samples, 2, 3, 2)
+    
+
+   for s in 2:n
+        states[s, :] = simulate_regimes(Y, X, Β0, cov_sample[s-1], t_m[s-1, :, :], states_zero)
+        t_m[s, :, :] = sample_transition_matrix(states[s, :], k)
+        #cov_sample[n, :, :, :] = sample_covariance(Y, X, Β0, states[s,:], k)
+        push!(cov_sample, sample_covariance(Y, X, Β0, states[s,:], k))
+        #sample_betas(Y,X,states[s,:], cov_sample[s,:,:,:],k)
+    end 
+ 
+    
+    return states, t_m, cov_sample
 
 end

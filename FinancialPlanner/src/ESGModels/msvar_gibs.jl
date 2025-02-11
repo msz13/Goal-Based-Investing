@@ -77,15 +77,18 @@ end
 function sample_betas(Y,X,regimes, posterior_sigmas, k)
 
     n_variables = size(Y,2)
-    result = zeros(k, n_variables+1, n_variables)
+    #result = zeros(k, n_variables+1, n_variables)
+    result = []
 
     for r in 1:k
         Ym = filter_X(Y, regimes, r)
         Xm = filter_X(X, regimes, r)
         Beta_mean = inv(Xm' * Xm) * Xm' * Ym
-        Beta_var = kron(Hermitian(inv(Xm'* Xm)), posterior_sigmas[r,:,:])
+        Beta_var = kron(Hermitian(inv(Xm'* Xm)), posterior_sigmas[r])
         Βm = rand(MvNormal(vec(Beta_mean), Beta_var))
-        result[r,:,:]  = reshape(Βm, n_variables+1, n_variables)
+        #result[r,:,:]  = reshape(Βm, n_variables+1, n_variables)
+        push!(result, reshape(Βm, n_variables+1, n_variables)')
+
     end
     
     return result
@@ -107,18 +110,18 @@ function msvar(Y, X, transition_matrix0, Β0, Σ0, n_burn, n_samples)
 
     t_m[1, :, :] = sample_transition_matrix(states[1, :], k)
 
-    #Β_sample = zeros(n_samples, 2, 3, 2)
+    Β_sample = [sample_betas(Y,X,states[1,:], cov_sample[1],k)]
     
 
    for s in 2:n
-        states[s, :] = simulate_regimes(Y, X, Β0, cov_sample[s-1], t_m[s-1, :, :], states_zero)
+        states[s, :] = simulate_regimes(Y, X, Β_sample[s-1], cov_sample[s-1], t_m[s-1, :, :], states_zero)
         t_m[s, :, :] = sample_transition_matrix(states[s, :], k)
         #cov_sample[n, :, :, :] = sample_covariance(Y, X, Β0, states[s,:], k)
         push!(cov_sample, sample_covariance(Y, X, Β0, states[s,:], k))
-        #sample_betas(Y,X,states[s,:], cov_sample[s,:,:,:],k)
+        push!(Β_sample, sample_betas(Y,X,states[s,:], cov_sample[s],k))
+        states_zero = unconditional_regimes(t_m[s-1, :, :])
     end 
- 
-    
-    return states, t_m, cov_sample
+     
+    return states[n_burn+1:end, :], t_m[n_burn+1:end, :, :], Β_sample[n_burn+1:end], cov_sample[n_burn+1:end]
 
 end

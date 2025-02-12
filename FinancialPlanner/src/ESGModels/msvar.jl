@@ -17,7 +17,7 @@ function hamilton_step(y, X, Β, Σ, transition_matrix, states_zero)
     
     probs = η .* s .+ 1e-12 
    
-    return return probs / sum(probs)
+    return probs / sum(probs)
     
 end
 

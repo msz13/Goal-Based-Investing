@@ -84,7 +84,7 @@ function sample_betas(Y,X,regimes, posterior_sigmas, k)
         Ym = filter_X(Y, regimes, r)
         Xm = filter_X(X, regimes, r)
         Beta_mean = inv(Xm' * Xm) * Xm' * Ym
-        Beta_var = kron(Hermitian(inv(Xm'* Xm)), posterior_sigmas[r])
+        Beta_var = kron(posterior_sigmas[r], Hermitian(inv(Xm'* Xm)))
         Βm = rand(MvNormal(vec(Beta_mean), Beta_var))
         #result[r,:,:]  = reshape(Βm, n_variables+1, n_variables)
         push!(result, reshape(Βm, n_variables+1, n_variables)')

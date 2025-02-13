@@ -52,7 +52,7 @@ function simulate_regimes(initial_regimes_probs, transition_matrix, n_steps, n_s
 
     for t in 2:n_steps
 
-        result[t,:] =  [sample([1,2], ProbabilityWeights(transition_matrix[r,:])) for r in result[1,:]]
+        result[t,:] =  [sample([1,2], ProbabilityWeights(transition_matrix[r,:])) for r in result[t-1,:]]
 
     end         
 

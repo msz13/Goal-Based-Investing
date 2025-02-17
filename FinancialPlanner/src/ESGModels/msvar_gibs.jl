@@ -63,7 +63,7 @@ function sample_covariance(Y, X, Β, regimes, k)
         Xm = filter_X(X, regimes, r)
         Tm = size(Ym, 1)
         U = calc_residuals(Ym,Xm, Β[r]')
-        μ = 1/Tm * U' * U
+        μ = U' * U
         ν = Tm-k-1
         #result[r,:,:] =  rand(InverseWishart(ν, μ))
         #result[r,:,:] = μ

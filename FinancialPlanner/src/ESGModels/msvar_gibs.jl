@@ -2,20 +2,20 @@
 function simulate_regimes(Y, X, Β, Σ, transition_matrix, states_zero)
 
     P = transition_matrix
-    k = size(transition_matrix, 1)
+    k = size(transition_matrix, 1) # n_regimes
 
     regimes_probs = hamilton_filter(Y,X, Β, Σ, P, states_zero)
 
     T = size(regimes_probs)[1]
     result = zeros(Int64, T)
         
-    result[end] = sample([1,2], ProbabilityWeights(regimes_probs[end,:]),1)[1] 
+    result[end] = sample(1:k, ProbabilityWeights(regimes_probs[end,:]),1)[1] 
 
     for t in T-1:-1:1
         Stp1 = zeros(k)
         Stp1[result[t+1]] = 1.
         smoothed_prob = smooth_step(Stp1, regimes_probs[t, :], P)
-        result[t] = sample([1, 2], ProbabilityWeights(smoothed_prob),1)[1] 
+        result[t] = sample(1:k, ProbabilityWeights(smoothed_prob),1)[1] 
 
     end       
     
@@ -63,10 +63,14 @@ function sample_covariance(Y, X, Β, regimes, k)
         Xm = filter_X(X, regimes, r)
         Tm = size(Ym, 1)
         U = calc_residuals(Ym,Xm, Β[r]')
-        μ = U' * U
-        ν = Tm-k-1
+        μ = U' * U + diagm(fill(1e-8,n_variables))
+        ν = n_variables + Tm #Tm-k-1
         #result[r,:,:] =  rand(InverseWishart(ν, μ))
         #result[r,:,:] = μ
+
+        if isposdef(μ) != true 
+            throw("sigma not positive define")
+        end
         push!(result, rand(InverseWishart(ν, μ)))
     end   
 
@@ -99,9 +103,9 @@ function msvar(Y, X, transition_matrix0, Β0, Σ0, n_burn, n_samples)
 
     T = size(Y, 1) 
     n = n_burn + n_samples
-    k = 2 # n_regimes
+    k = size(transition_matrix0, 1) # n_regimes
     states = zeros(Int64, n, T)
-    t_m = zeros(n, 2, 2)
+    t_m = zeros(n, k, k)
 
     states_zero = unconditional_regimes(transition_matrix0)
     states[1, :] = simulate_regimes(Y, X, Β0, Σ0, transition_matrix0, states_zero)

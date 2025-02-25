@@ -5,8 +5,9 @@ Simulate Markov Switching VARS
 predict(B::Matrix{Float64}, X::Vector{Float64}) = B * X 
 
 function simulate_initial_regimes(initial_regimes_probs, transition_matrix, n_scenarios)
+    n_regimes = length(initial_regimes_probs)
     next_regimes_probs = next_regime(initial_regimes_probs, transition_matrix)
-    return sample([1,2], ProbabilityWeights(next_regimes_probs), n_scenarios)
+    return sample(1:n_regimes, ProbabilityWeights(next_regimes_probs), n_scenarios)
 end
 
 function simulate_next_regimes_for_previous_regimes(previous_regimes, transition_matrix)
@@ -45,6 +46,8 @@ end
 
 function simulate_regimes(initial_regimes_probs, transition_matrix, n_steps, n_scenarios) 
 
+    n_regimes = length(initial_regimes_probs)
+
     result = zeros(Int64, n_steps, n_scenarios)
 
     
@@ -52,7 +55,7 @@ function simulate_regimes(initial_regimes_probs, transition_matrix, n_steps, n_s
 
     for t in 2:n_steps
 
-        result[t,:] =  [sample([1,2], ProbabilityWeights(transition_matrix[r,:])) for r in result[t-1,:]]
+        result[t,:] =  [sample(1:n_regimes, ProbabilityWeights(transition_matrix[r,:])) for r in result[t-1,:]]
 
     end         
 

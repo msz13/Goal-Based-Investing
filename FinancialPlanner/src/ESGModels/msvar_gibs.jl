@@ -1,3 +1,11 @@
+function evaluate_all_regimes_sampled(regimes, n_regimes)
+    
+    regime_count = [count(x -> x == r, regimes) for r in 1:n_regimes ]
+    
+    return all(regime_count .> 0) 
+
+end
+
 
 function simulate_regimes(Y, X, Β, Σ, transition_matrix, states_zero)
 
@@ -9,15 +17,20 @@ function simulate_regimes(Y, X, Β, Σ, transition_matrix, states_zero)
     T = size(regimes_probs)[1]
     result = zeros(Int64, T)
         
-    result[end] = sample(1:k, ProbabilityWeights(regimes_probs[end,:]),1)[1] 
+   
 
-    for t in T-1:-1:1
-        Stp1 = zeros(k)
-        Stp1[result[t+1]] = 1.
-        smoothed_prob = smooth_step(Stp1, regimes_probs[t, :], P)
-        result[t] = sample(1:k, ProbabilityWeights(smoothed_prob),1)[1] 
-
-    end       
+    while true
+        result[end] = sample(1:k, ProbabilityWeights(regimes_probs[end,:]),1)[1] 
+        for t in T-1:-1:1
+            Stp1 = zeros(k)
+            Stp1[result[t+1]] = 1.
+            smoothed_prob = smooth_step(Stp1, regimes_probs[t, :], P)
+            result[t] = sample(1:k, ProbabilityWeights(smoothed_prob),1)[1] 
+        end   
+        if evaluate_all_regimes_sampled(result, k)
+            break
+        end
+    end    
     
     return result    
 
@@ -87,7 +100,14 @@ function sample_betas(Y,X,regimes, posterior_sigmas, k)
     for r in 1:k
         Ym = filter_X(Y, regimes, r)
         Xm = filter_X(X, regimes, r)
-        Beta_mean = inv(Xm' * Xm) * Xm' * Ym
+        Beta_mean = []
+
+        try
+            Beta_mean = inv(Xm' * Xm) * Xm' * Ym
+        catch e
+            isa(e, LinearAlgebra.SingularException)
+            println("singular exeption, length Y $(size(Ym, 1))")
+        end
         Beta_var = kron(posterior_sigmas[r], Hermitian(inv(Xm'* Xm)))
         Βm = rand(MvNormal(vec(Beta_mean), Beta_var))
         #result[r,:,:]  = reshape(Βm, n_variables+1, n_variables)

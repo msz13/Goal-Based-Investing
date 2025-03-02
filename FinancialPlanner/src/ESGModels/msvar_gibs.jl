@@ -1,8 +1,8 @@
-function evaluate_all_regimes_sampled(regimes, n_regimes)
+function evaluate_all_regimes_sampled(regimes, n_regimes, n_variables)
     
     regime_count = [count(x -> x == r, regimes) for r in 1:n_regimes ]
     
-    return all(regime_count .> 0) 
+    return all(regime_count .>= n_variables+3) 
 
 end
 
@@ -13,13 +13,22 @@ function simulate_regimes(Y, X, Β, Σ, transition_matrix, states_zero)
     k = size(transition_matrix, 1) # n_regimes
 
     regimes_probs = hamilton_filter(Y,X, Β, Σ, P, states_zero)
+    n_variables = size(X, 2)
 
     T = size(regimes_probs)[1]
     result = zeros(Int64, T)
+
+    result[end] = sample(1:k, ProbabilityWeights(regimes_probs[end,:]),1)[1] 
+    for t in T-1:-1:1
+        Stp1 = zeros(k)
+        Stp1[result[t+1]] = 1.
+        smoothed_prob = smooth_step(Stp1, regimes_probs[t, :], P)
+        result[t] = sample(1:k, ProbabilityWeights(smoothed_prob),1)[1] 
+    end   
         
    
 
-    while true
+#=     while true
         result[end] = sample(1:k, ProbabilityWeights(regimes_probs[end,:]),1)[1] 
         for t in T-1:-1:1
             Stp1 = zeros(k)
@@ -27,10 +36,10 @@ function simulate_regimes(Y, X, Β, Σ, transition_matrix, states_zero)
             smoothed_prob = smooth_step(Stp1, regimes_probs[t, :], P)
             result[t] = sample(1:k, ProbabilityWeights(smoothed_prob),1)[1] 
         end   
-        if evaluate_all_regimes_sampled(result, k)
+        if evaluate_all_regimes_sampled(result, k, n_variables)
             break
         end
-    end    
+    end     =#
     
     return result    
 
@@ -77,10 +86,8 @@ function sample_covariance(Y, X, Β, regimes, k)
         Tm = size(Ym, 1)
         U = calc_residuals(Ym,Xm, Β[r]')
         μ = U' * U + diagm(fill(1e-8,n_variables))
-        ν = n_variables + Tm #Tm-k-1
-        #result[r,:,:] =  rand(InverseWishart(ν, μ))
-        #result[r,:,:] = μ
-
+        ν = Tm - 1 #Tm-k-1 #n_variables + Tm
+        
         if isposdef(μ) != true 
             throw("sigma not positive define")
         end
@@ -122,6 +129,7 @@ end
 function msvar(Y, X, transition_matrix0, Β0, Σ0, n_burn, n_samples)
 
     T = size(Y, 1) 
+    n_variables = size(X, 2)
     n = n_burn + n_samples
     k = size(transition_matrix0, 1) # n_regimes
     states = zeros(Int64, n, T)
@@ -137,7 +145,8 @@ function msvar(Y, X, transition_matrix0, Β0, Σ0, n_burn, n_samples)
     
 
    for s in 2:n
-        states[s, :] = simulate_regimes(Y, X, Β_sample[s-1], cov_sample[s-1], t_m[s-1, :, :], states_zero)
+        regimes = simulate_regimes(Y, X, Β_sample[s-1], cov_sample[s-1], t_m[s-1, :, :], states_zero)
+        states[s, :] = evaluate_all_regimes_sampled(regimes, k, n_variables) ? regimes : states[s-1, :]
         t_m[s, :, :] = sample_transition_matrix(states[s, :], k)
         #cov_sample[n, :, :, :] = sample_covariance(Y, X, Β0, states[s,:], k)
         push!(cov_sample, sample_covariance(Y, X, Β_sample[s-1], states[s,:], k))

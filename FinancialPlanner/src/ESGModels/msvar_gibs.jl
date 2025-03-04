@@ -151,7 +151,7 @@ function msvar(Y, X, transition_matrix0, Β0, Σ0, n_burn, n_samples)
         #cov_sample[n, :, :, :] = sample_covariance(Y, X, Β0, states[s,:], k)
         push!(cov_sample, sample_covariance(Y, X, Β_sample[s-1], states[s,:], k))
         push!(Β_sample, sample_betas(Y,X,states[s,:], cov_sample[s],k))
-        states_zero = unconditional_regimes(t_m[s-1, :, :])
+        states_zero = unconditional_regimes(t_m[s, :, :])
     end 
      
     return states[n_burn+1:end, :], t_m[n_burn+1:end, :, :], Β_sample[n_burn+1:end], cov_sample[n_burn+1:end]

@@ -5,13 +5,13 @@ function generate_data(T=100, regimes=2, dim=2)
     data = zeros(T, dim)
     
     params = [
-        ([-0.5, 0.3], [0.5 0.2; 0.2 0.5], [0.6 -0.2; -0.1 0.4]),
-        ([0.2, -0.4], [0.3 0.1; 0.1 0.3], [-0.3 0.5; 0.2 -0.1])
+        ([0.09, 0.03], [0.3 0.2; 0.2 0.6], [0.0064 0.00072; 0.00072 0.0009] .+ 1e-12),
+        ([-0.02, 0.045], [0.4 0.25; 0.15 0.43], [0.0324 0.002205; 0.002205 0.001225])
     ]
     
     for t in 2:T
         state = states[t]
-        mean, cov, coef = params[state]
+        mean, coef, cov = params[state]
         data[t, :] = mean + coef * data[t-1, :] + rand(MvNormal([0, 0], cov))
     end
     
@@ -24,28 +24,47 @@ end
     # State sequence.
     s = tzeros(Int, T)
 
+    # Transition matrix.
+    P = Vector{Vector}(undef, regimes)
+
     # Emission matrix.
     mus = Vector(undef, regimes)
     betas = Vector(undef, regimes)
     sigmas = Vector(undef, regimes)
-
-    # Transition matrix.
-    T = Vector{Vector}(undef, regimes)
+  
     
     # Regime-specific parameters
     for r in 1:regimes
-        T[r] ~ Dirichlet(ones(regimes)/regimes)
+        P[r] ~ Dirichlet(ones(regimes)/regimes)
         mus[r] ~ filldist(Normal(0,1), dim)
-        betas[r] ~ filldist(Normal(0,1), dim)
+        betas[r] ~ filldist(Normal(0,1), dim, dim)
+        sigmas[r] ~ InverseWishart(dim + 1, Matrix(I(dim)))
     end
 
     s[1] ~ Categorical(ones(regimes)/regimes)
 
     # Observation likelihood
     for t in 2:T
-        s[t] ~ Categorical(vec(T[s[t - 1]]))
+        s[t] ~ Categorical(vec(P[s[t - 1]]))
         mean = mus[s[t]] + betas[s[t]] * data[t-1, :]
         data[t, :] ~ MvNormal(mean, sigmas[s[t]])
+    end
+end
+
+
+@model function var_model(data, regimes=2)
+    T, dim = size(data)
+ 
+
+    # Emission matrix.
+    mus ~ filldist(Normal(0,1), dim)
+    betas ~ filldist(Normal(0,1), dim, dim)
+    sigmas ~ InverseWishart(dim + 1, Matrix(I(dim)))
+   
+    # Observation likelihood
+    for t in 2:T
+        mean = mus + betas * data[t-1, :]
+        data[t, :] ~ MvNormal(mean, sigmas)
     end
 end
 

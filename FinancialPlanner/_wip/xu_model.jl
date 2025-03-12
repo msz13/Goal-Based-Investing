@@ -20,13 +20,11 @@ struct Θ_params
     Θd_mean
 end
 
-struct πu_params
-    mean
+struct πstate_params
+    πu_mean
+    πd_mean
 end
 
-struct πd_params
-    mean
-end
 
 struct π_params
     mean
@@ -39,22 +37,34 @@ struct π_params
     σΘu
     σΘd
     σπu
-    σϕd
+    σπd
   
 end
 
 
-function inflation_step(π_params:: π_params, πu_params:: πu_params, πd_params:: πd_params, Θ_mean:: Float32, Θu_mean:: Float32, Θd_mean:: Float32, Θt::Float32, Θut::Float32, Θdt::Float32, πt::Float32, πut:: Float32, πdt:: Float32)
 
-    ωπu = Gamma(πut, 1) - πut
-    ωπd = Gamma(πdt, 1) = πdt
+function inflation_step(π:: π_params, π_state:: πstate_params, Θ_mean:: Float64, Θu_mean:: Float64, Θd_mean:: Float64, πt:: Float64, πut:: Float64, πdt:: Float64, Θt::Float64, Θut::Float64, Θdt::Float64, ωΘu:: Float64, ωΘd:: Float64)
+
+    ωπu = rand(Gamma(πut, 1)) - πut
+    ωπd = rand(Gamma(πdt, 1)) - πdt
     
-    Θ_term = π_params.pΘ * (Θt - Θ_mean) + π_params.pΘu * (Θut - Θu_mean)  + π_params.pΘd * (Θdt - Θd_mean) 
-    π_term = π_params.pπ * (πt - π_params.mean) + π_params.pπu(πut - πu_params.mean) + π_params.pπd(πdt - πd_params.mean)
-    u = (π_params.σΘu * ωΘu + π_params.σΘd * ωΘd) + (π_params.σπu * ωπu - π_params.σπd * ωπd)
+    Θ_term = π.pΘ * (Θt - Θ_mean) + π.pΘu * (Θut - Θu_mean)  + π.pΘd * (Θdt - Θd_mean) 
+    π_term = π.pπ * (πt - π.mean) + π.pπu * (πut - π_state.πu_mean) + π.pπd * (πdt - π_state.πd_mean)
+    u = (π.σΘu * ωΘu + π.σΘd * ωΘd) + (π.σπu * ωπu - π.σπd * ωπd)
 
-    πt1 = π_params.mean + Θ_term + π_term + u
+    πt1 = π.mean + Θ_term + π_term + u
        
     return πt1    
         
-end
+end 
+ 
+#= 
+function inflation_step(π:: π_params, Θ_mean:: Float64, Θu_mean:: Float64, Θt:: Float64, Θut:: Float64)
+    
+    Θ_term = π.pΘ * (Θt - Θ_mean) + π.pΘu * (Θut - Θu_mean)
+
+    πt1 = π.mean + Θ_term
+       
+    return πt1    
+    
+end  =#

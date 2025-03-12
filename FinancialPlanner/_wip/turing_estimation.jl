@@ -25,7 +25,9 @@ model = switching_model(data)
 
 # Sampling
 g = Gibbs(NUTS(1000, 0.65, :mus, :betas, :sigmas, :P), PG(120, :s))
-chain = sample(model, g, 1000); 
+chain = sample(model, PG(120), 5000); 
+
+P = summarize(MCMCChains.group(chain, :P))
 
 mus = summarize(MCMCChains.group(chain, :mus))
 

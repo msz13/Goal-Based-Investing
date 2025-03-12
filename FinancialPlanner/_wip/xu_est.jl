@@ -35,14 +35,13 @@ end
 
 quantile(Θ, [.05, .25, .5, .75, .95]) #.* 12
 
-
 quantile(Θu, [.05, .25, .5, .75, .95])
 quantile(Θd, [.05, .25, .5, .75, .95]) 
 
 
 params = π_params(
     0.0017,
-    0, 
+    0.0002, 
     0,
     0,
     .5,
@@ -56,6 +55,17 @@ params = π_params(
 
 
 
-inflation_step(params, πu_params(3.9091), πd_params(100), -1.01E-04, 500, 12.9194, 0.005, 500, 10, 0.001, 2, 100)
+π_state = πstate_params(3.9091, 100.)
+
+inflation_step(params, π_state ,-1.01E-04, 500., 12.9194, 0.002, 2., 120., 0.005, 510., 10., 3.79, -5.78)
+
+π = zeros(n_samples)
+
+for s in 1:n_samples
+    π[s] =  inflation_step(params, π_state ,-1.01E-04, 500., 12.9194, 0.0075, 30.5, 90., 0.005, 510., 10., 3.79, -5.78)
+end
+
+quantile(π, [.05, .25, .5, .75, .95]) * 12
 
 
+.09/12

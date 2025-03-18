@@ -14,6 +14,37 @@ function output_step(Θ_mean, ρθθ, ρθθu, ρθθd, Θt, Θu_mean, pΘu, Θu
     return Θt1, Θut1, Θdt1, ωΘu, ωΘd
 end
 
+struct Output_Params
+    mean
+    ρθ
+    ρθu
+    ρθd
+    σΘu
+    σΘd
+end
+
+struct OutputState_Params
+    u_mean
+    pΘu
+    d_mean
+    pΘd
+    σΘu
+    σΘd
+end
+
+function output_simulation(Output_Params, OutputState_Params, Θt0, Θut0, , Θdt0, n_steps)
+    Θ = zeros(n_steps)
+    Θu = zeros(n_steps)
+    Θd = zeros(n_steps)
+
+    Θ[1], Θu[1], Θd[1] = output_step(Output_Params.mean, Output_Params.pΘ, Output_Params.pΘu, )
+
+   #=  for t in 1:n_steps
+        Θ, Θu, Θd = output_step()
+
+    end =#
+end
+
 struct Θ_params
     Θ_mean
     Θu_mean

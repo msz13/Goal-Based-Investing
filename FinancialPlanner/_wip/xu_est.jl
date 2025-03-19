@@ -21,8 +21,25 @@ pΘd = 0.9040
 σΘu = 0.7860
 σΘd = 2.0579
 
+Θ_p =  Output_Params(
+    -1.01E-04,
+    0.1395, 
+    1.31E-05,
+    -2.18E-04,
+    1.12E-04,
+    -0.0019)
 
-output_step(Θ_mean, ρθθ, ρθθu, ρθθd, Θt, Θu_mean, pΘu, Θut, Θd_mean, pΘd, Θdt, σΘΘu, σΘΘd, σΘu, σΘd)
+
+Θstate_p = OutputState_Params(
+    500, 
+    0.9993,
+    12.9194,
+    0.9040,
+    0.7860,
+    2.0579
+    )
+
+output_step(Θ_p, Θstate_p, -1.01E-04, 500, 12.92)
 
 n_samples = 1000
 
@@ -30,10 +47,10 @@ n_samples = 1000
 
 
 for s in 1:n_samples
-    Θ[s], Θu[s], Θd[s] =  output_step(Θ_mean, ρθθ, ρθθu, ρθθd, Θt, Θu_mean, pΘu, Θut, Θd_mean, pΘd, Θdt, σΘΘu, σΘΘd, σΘu, σΘd)
+    Θ[s], Θu[s], Θd[s] =  output_step(Θ_p, Θstate_p, -1.01E-04, 500, 12.92)
 end
 
-quantile(Θ, [.05, .25, .5, .75, .95]) #.* 12
+quantile(Θ, [.05, .25, .5, .75, .95]) #* 12
 
 quantile(Θu, [.05, .25, .5, .75, .95])
 quantile(Θd, [.05, .25, .5, .75, .95]) 

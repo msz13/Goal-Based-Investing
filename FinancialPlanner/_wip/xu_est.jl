@@ -39,7 +39,7 @@ pΘd = 0.9040
     2.0579
     )
 
-output_step(Θ_p, Θstate_p, -1.01E-04, 500, 12.92)
+output_step(Θ_p, Θstate_p, -1.01E-04, 500., 12.92)
 
 n_samples = 1000
 
@@ -47,7 +47,7 @@ n_samples = 1000
 
 
 for s in 1:n_samples
-    Θ[s], Θu[s], Θd[s] =  output_step(Θ_p, Θstate_p, -1.01E-04, 500, 12.92)
+    Θ[s], Θu[s], Θd[s] =  output_step(Θ_p, Θstate_p, .005, 500., 10.92)
 end
 
 quantile(Θ, [.05, .25, .5, .75, .95]) #* 12

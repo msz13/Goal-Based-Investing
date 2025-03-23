@@ -18,10 +18,10 @@ struct OutputState_Params
 end
 
 
-function output_step(Output_Params, OutputState_Params, Θt0, Θut, Θdt)
+function output_step(Output_Params:: Output_Params, OutputState_Params:: OutputState_Params, Θt:: Float64, Θut:: Float64, Θdt:: Float64)
     
-    mean, ρΘΘ, ρΘθu, ρθθd, σΘθu, σΘΘd  = Output_Params.mean, Output_Params.ρΘ, Output_Params.ρθu, Output_Params.ρθd, Output_Params.σΘu, Output_Params.σΘd
-    
+    Θ_mean, ρθθ, ρθθu, ρθθd, σΘΘu, σΘΘd  = Output_Params.mean, Output_Params.ρθ, Output_Params.ρθu, Output_Params.ρθd, Output_Params.σΘu, Output_Params.σΘd
+    Θu_mean, Θd_mean, pΘu, pΘd, σΘu, σΘd = OutputState_Params.u_mean, OutputState_Params.d_mean, OutputState_Params.pΘu, OutputState_Params.pΘd, OutputState_Params.σΘu, OutputState_Params.σΘd 
 
     #= ωΘu = rand(Gamma(abs(Θut - Θu_mean),1))
     ωΘd = rand(Gamma(abs(Θdt - Θd_mean),1)) =#

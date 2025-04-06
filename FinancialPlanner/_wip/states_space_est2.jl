@@ -1,4 +1,4 @@
-using Distributions, LinearAlgebra
+using Distributions, LinearAlgebra, StatsBase
 
 #full model
 
@@ -118,7 +118,30 @@ V = [vdp vrp_dp vπp_dp vda_dp vra_dp vπa_dp vea_dp vτa_dp zeros(5)'
      zeros(5,13)
 ]
 
+sigmas = sqrt.([vdp, vrp, vπp, vda, vra, vπa, vea, vτa]) 
 
+CorrM = Symmetric([1 .91 -.7 -.38 -.3 .23 .74 -0.02
+         0 1 -.54 -.15 -.42 -.0 .48 -.12
+         0 0 1 .53 -.46 -.75 -59 -.68
+         0 0 0 1 -.31 -.51 -.32 -.43
+         0 0 0 0 1 .7 -.05 .93
+         0 0 0 0 0 1 .37 .86
+         0 0 0 0 0 0 1 .11
+         0 0 0 0 0 0 0 1
+])
+
+CorrM = collect(CorrM)
+
+isposdef(CorrM)
+
+VC = cor2cov(CorrM, sigmas)
+
+isposdef(VC)
+issymmetric(VC)
+
+eigen(VC).values
+
+MvNormal(zeros(8), Hermitian(VC))
 
 R = diagm([1.45*10^-1, 1.59*10^-14, 3.01*10^-13, 7.43*10^-10, 3.78*10^-12 ])
 
@@ -202,6 +225,5 @@ St0 = zeros(13)
 
 states = zeros(13, n_samples, T) 
 
-states[:, 1, 1] = f(F, V, St0)
+states[:, 1, 1] = f(F, VC, St0)
 
-isposdef(V)

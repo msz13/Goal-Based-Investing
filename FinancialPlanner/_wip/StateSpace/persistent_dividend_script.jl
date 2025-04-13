@@ -71,3 +71,18 @@ println(round.(b, digits=4))
 
 #b
 [1.756, 0.3019, -0.0992, 0.5201, -1.0967, 0.1373, 0.2291, -0.7503, 0.2902, 0.6158, 0.6958, 0.0252, 0.0928, 0.0341, 0.3044, 0.0072, 0.0533, 0.0607, 0.0145, 0.0404, 0.0153, 0.0113, 0.0383]
+
+
+ll_smc(smc,data) = begin
+    rng = StableRNG(1234)
+    return batch_tempered_smc(
+        rng,
+        smc,
+        data,
+        θ -> persistent_dividend_ssm(θ),
+        prior
+    )
+end
+
+kf_smc = ll_smc(SMC(512, KF()), y)
+pf_smc = ll_smc(SMC(64, PF(1024, 1.0)), y)

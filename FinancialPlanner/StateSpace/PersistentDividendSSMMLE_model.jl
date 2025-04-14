@@ -95,8 +95,9 @@ function buildQ(Q)
 end
 
 
+
 function default_filter(model::PersistentDividendSSM)
-    Fl = typeof_model_elements(model)
+    Fl = StateSpaceModels.typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
     P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
@@ -106,25 +107,99 @@ function default_filter(model::PersistentDividendSSM)
 end
 
 
+
+function initial_hyperparameters!(model:: PersistentDividendSSM)
+    names = get_names(model)
+    Fl = StateSpaceModels.typeof_model_elements(model)
+    initial_hyperparameters = Dict{String,Fl}()
+    
+    for Θ1 in get_Θ1(names)
+        initial_hyperparameters[Θ1] = 1.
+    end
+
+    for Θ2 in get_Θ2(names)
+        initial_hyperparameters[Θ2] = 1.
+    end
+
+    for σ in get_sigmas(names)
+        initial_hyperparameters[σ] = 1.
+    end
+
+    for v in get_state_variances(names)
+        initial_hyperparameters[v] = 1.
+    end
+
+    set_initial_hyperparameters!(model, initial_hyperparameters)
+
+    return nothing
+
+end
+
+get_Θ1(names) = filter(x -> occursin("θ1", x), names)
+get_Θ2(names) = filter(x -> occursin("θ1", x), names)
+get_sigmas(names) = filter(x -> occursin("σ", x), names)
+get_state_variances(names) = filter(x -> occursin("v", x), names)
+
+
+function constrain_hyperparameters!(model::PersistentDividendSSM)
+    names = get_names(model)
+     
+    for Θ1 in get_Θ1(names)
+        constrain_box!(model, Θ1, -.9999, .9999)
+    end
+
+    for Θ2 in get_Θ2(names)
+        constrain_box!(model, Θ2, -.9999, .9999)
+    end
+
+    for σ in get_sigmas(names)
+        constrain_variance!(model, σ)
+    end
+
+    for v in get_state_variances(names)
+        constrain_variance!(model, v)
+    end
+
+    return model
+end
+
+function unconstraint_hyperparameters!(model::PersistentDividendSSM)
+    names = get_names(model)
+     
+    for Θ1 in get_Θ1(names)
+        constrain_box!(model, Θ1, -.9999, .9999)
+    end
+
+    for Θ2 in get_Θ2(names)
+        constrain_box!(model, Θ2, -.9999, .9999)
+    end
+
+    for σ in get_sigmas(names)
+        constrain_variance!(model, σ)
+    end
+
+    for v in get_state_variances(names)
+        constrain_variance!(model, v)
+    end
+
+    return model
+end
+
+
 function fill_model_system!(model::PersistentDividendSSM)
     
     names = get_names(model)
-
-    Θ1names = filter(x -> occursin("θ1", x), names)
-    Θ2names = filter(x -> occursin("θ2", x), names)
       
-    Θ1_vars = [get_constrained_value(model, n) for n in Θ1names]
-    Θ2_vars = [get_constrained_value(model, n) for n in Θ2names]
+    Θ1_vars = [get_constrained_value(model, n) for n in get_Θ1(names)]
+    Θ2_vars = [get_constrained_value(model, n) for n in get_Θ2(names)]
     model.system.T = buildF(Θ1_vars, Θ2_vars)
     n = 40
     ρ = 0.967
     model.system.Z = buildH(n, ρ, Θ1_vars, Θ2_vars)
 
-    sigmas_names = filter(x -> occursin("σ", x), names)
-    model.system.H = diagm([get_constrained_value(model, n) for n in sigmas_names])
+    model.system.H = diagm([get_constrained_value(model, n) for n in get_sigmas(names)])
 
-    variances_names = filter(x -> occursin("v", x), names)
-    model.system.Q[1:8,1:8] = diagm([get_constrained_value(model, n) for n in variances_names])
+    model.system.Q[1:8,1:8] = diagm([get_constrained_value(model, n) for n in get_state_variances(names)])
 
     return model
 end

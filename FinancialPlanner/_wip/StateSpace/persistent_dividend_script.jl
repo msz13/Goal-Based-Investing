@@ -12,7 +12,7 @@ includet("persistent_dividend_model.jl")
 R = [1.45*10^-1, 1.59*10^-14, 3.01*10^-13, 7.43*10^-10, 3.78*10^-12 ]
 
 #Q = diagm([4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09])
-Q = [4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09]
+Q = [4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09] ./ 100
 
 sqrt.(R) 
 sqrt.(Q) ./ 100 * 2
@@ -24,34 +24,31 @@ model = persistent_dividend_ssm(params_vec)
 
 
 rng = StableRNG(1234)
-x, y = generate_data(rng, model, 100)
+x, y = generate_data(rng, model, 250)
 
 
-
-prior = Product([fill(Normal(), 10); fill(truncated(Cauchy(.01, .03); lower=0), 13)])                 
+prior = Product([fill(Normal(), 10); fill(truncated(Normal(0,.5); lower=0), 13)])                 
 
 rand(prior)
-
 
 
 pdf(prior, params_vec)
 
 
-
 ll_pmmh = PMMH(
-                5_000,
-                θ -> MvNormal(θ, Matrix((0.1)*I(23))),
+                25_000,
+                θ -> MvNormal(θ, Matrix((0.3)*I(23))),
                 θ -> persistent_dividend_ssm(θ),
                 prior
                 )
 
 
-kf_pmmh = sample(rng, ll_pmmh, y, KF(); burn_in=3000)
+kf_pmmh = sample(rng, ll_pmmh, y, KF(); burn_in=20_000)
 
 a = mean(getproperty.(kf_pmmh, :params))
 
 
-pf_pmmh = sample(rng, ll_pmmh, y, PF(256, 1.0); burn_in=1000)
+pf_pmmh = sample(rng, ll_pmmh, y, PF(256, 1.0); burn_in=20_000)
 
 b = mean(getproperty.(pf_pmmh, :params))
 
@@ -84,5 +81,5 @@ ll_smc(smc,data) = begin
     )
 end
 
-kf_smc = ll_smc(SMC(512, KF()), y)
+kf_smc = ll_smc(SMC(1024, KF()), y)
 pf_smc = ll_smc(SMC(64, PF(1024, 1.0)), y)

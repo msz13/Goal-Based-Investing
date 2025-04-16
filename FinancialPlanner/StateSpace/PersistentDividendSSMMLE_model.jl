@@ -205,6 +205,32 @@ function fill_model_system!(model::PersistentDividendSSM)
 end
 
 
+"""
+    simulate_scenarios(
+        model::StateSpaceModel, steps_ahead::Int, n_scenarios::Int;
+        filter::KalmanFilter=default_filter(model)
+    ) -> Array{<:AbstractFloat, 3}
 
+Samples `n_scenarios` future scenarios via Monte Carlo simulation for `steps_ahead`
+using the desired `filter`.
+"""
+function simulate_scenarios2(
+    model::PersistentDividendSSM,
+    steps_ahead::Int,
+    n_scenarios::Int;
+    filter::StateSpaceModels.KalmanFilter=default_filter(model),
+)
+    # Query the type of model elements
+    Fl = StateSpaceModels.typeof_model_elements(model)
+    fo = kalman_filter(model; filter = filter)
+    last_state = fo.a[end]
+    num_series = size(model.system.y, 2)
+
+    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
+    for s in 1:n_scenarios
+        scenarios[:, :, s] = simulate(model.system, last_state, steps_ahead)
+    end
+    return scenarios
+end
 
 

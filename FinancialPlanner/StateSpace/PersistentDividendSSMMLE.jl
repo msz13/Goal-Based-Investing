@@ -24,7 +24,7 @@ initial_hyperparameters!(model)
 m_new = fill_model_system!(model)
 
 f = default_filter(model)
-scenarios = simulate_scenarios(model, 250, 1000, f)
+scenarios = simulate_scenarios2(model, 250, 1)
 
 print_results(model)
 

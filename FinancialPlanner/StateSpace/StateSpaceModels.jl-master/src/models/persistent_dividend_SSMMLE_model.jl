@@ -1,6 +1,8 @@
 using StateSpaceModels
 
 
+
+
 #TODO handle names
 #TODO initiate model
 #TODO initial hiperparameters
@@ -19,7 +21,7 @@ mutable struct PersistentDividendSSM <: StateSpaceModel
 
     function PersistentDividendSSM(y::Matrix{Fl}) where Fl
               
-        system = create_system(y)
+        system = system = create_system(collect(y'), (Θ1 = ones(5), Θ2 = ones(5), R=ones(5), Q=ones(8), n=40, ρ= 0.967))
         names = handle_model_names()
         hyperparameters = StateSpaceModels.HyperParameters{Fl}(names)
 
@@ -42,19 +44,18 @@ end
 
 
 
- function create_system(y::Matrix)
+function create_system(y::Matrix, params::NamedTuple{(:Θ1, :Θ2, :R, :Q, :n, :ρ)})
     
     Fl = Float64
-    T = buildF(ones(5), ones(5))
-    n = 40
-    ρ = 0.967
-    Z = buildH(n,ρ, ones(5), ones(5))
+    T = buildF(params.Θ1, params.Θ2)
+    
+    Z = buildH(params.n,params.ρ, params.Θ1, params.Θ2)
 
     d = zeros(Fl, 5)
     c = zeros(Fl, 13)
-    H = diagm(ones(5))
+    H = diagm(params.R)
     Q = zeros(13,13)
-    Q[1:8,1:8] = diagm(ones(8))
+    Q[1:8,1:8] = diagm(params.Q)
     R = ones(13,13)
     system = LinearMultivariateTimeInvariant{Fl}(y, Z, T, R, d, c, H, Q)
     return system
@@ -96,7 +97,7 @@ end
 
 
 
-function default_filter(model::PersistentDividendSSM)
+function StateSpaceModels.default_filter(model::PersistentDividendSSM)
     Fl = StateSpaceModels.typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
@@ -108,7 +109,7 @@ end
 
 
 
-function initial_hyperparameters!(model:: PersistentDividendSSM)
+function StateSpaceModels.initial_hyperparameters!(model:: PersistentDividendSSM)
     names = get_names(model)
     Fl = StateSpaceModels.typeof_model_elements(model)
     initial_hyperparameters = Dict{String,Fl}()
@@ -141,7 +142,7 @@ get_sigmas(names) = filter(x -> occursin("σ", x), names)
 get_state_variances(names) = filter(x -> occursin("v", x), names)
 
 
-function constrain_hyperparameters!(model::PersistentDividendSSM)
+function StateSpaceModels.constrain_hyperparameters!(model::PersistentDividendSSM)
     names = get_names(model)
      
     for Θ1 in get_Θ1(names)
@@ -163,7 +164,7 @@ function constrain_hyperparameters!(model::PersistentDividendSSM)
     return model
 end
 
-function unconstraint_hyperparameters!(model::PersistentDividendSSM)
+function StateSpaceModels.unconstrain_hyperparameters!(model::PersistentDividendSSM)
     names = get_names(model)
      
     for Θ1 in get_Θ1(names)
@@ -186,7 +187,7 @@ function unconstraint_hyperparameters!(model::PersistentDividendSSM)
 end
 
 
-function fill_model_system!(model::PersistentDividendSSM)
+function StateSpaceModels.fill_model_system!(model::PersistentDividendSSM)
     
     names = get_names(model)
       
@@ -205,32 +206,11 @@ function fill_model_system!(model::PersistentDividendSSM)
 end
 
 
-"""
-    simulate_scenarios(
-        model::StateSpaceModel, steps_ahead::Int, n_scenarios::Int;
-        filter::KalmanFilter=default_filter(model)
-    ) -> Array{<:AbstractFloat, 3}
-
-Samples `n_scenarios` future scenarios via Monte Carlo simulation for `steps_ahead`
-using the desired `filter`.
-"""
-function simulate_scenarios2(
-    model::PersistentDividendSSM,
-    steps_ahead::Int,
-    n_scenarios::Int;
-    filter::StateSpaceModels.KalmanFilter=default_filter(model),
-)
-    # Query the type of model elements
-    Fl = StateSpaceModels.typeof_model_elements(model)
-    fo = kalman_filter(model; filter = filter)
-    last_state = fo.a[end]
-    num_series = size(model.system.y, 2)
-
-    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
-    for s in 1:n_scenarios
-        scenarios[:, :, s] = simulate(model.system, last_state, steps_ahead)
-    end
-    return scenarios
+function reinstantiate(model::PersistentDividendSSM, y::Matrix{Fl}) where Fl
+    return MultivariateBasicStructural(y)
 end
+
+
+has_exogenous(::PersistentDividendSSM) = false
 
 

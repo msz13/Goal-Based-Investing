@@ -118,6 +118,10 @@ V = [vdp vrp_dp vπp_dp vda_dp vra_dp vπa_dp vea_dp vτa_dp zeros(5)'
      zeros(5,13)
 ]
 
+isposdef(V)
+ispossemdef(M::Matrix{Fl}) where Fl = all(i -> i >= 0.0, eigvals(M))
+ispossemdef(V)
+
 sigmas = sqrt.([vdp, vrp, vπp, vda, vra, vπa, vea, vτa]) 
 
 CorrM = Symmetric([1 .91 -.7 -.38 -.3 .23 .74 -0.02

@@ -6,7 +6,8 @@ module FinancialBVAR
     using PrettyTables
     using TimeSeries
     using StatsBase
-    using MCMCChains
+    #using MCMCChains
+    using Turing
 
     export NormalWishartBVARmodel, NormalWishartBVAR, sample_posterior!, drift, simulate, posterior_summary, cov2cor_posterior
     export VARModel, model_summary
@@ -179,7 +180,7 @@ module FinancialBVAR
 
         for t in 2:n_steps+1
             for s in 1:n_scenarios
-                result[:,s,t] = rand(MvNormal(drift(C,result[:,s,t-1]),model.Σ),)
+                result[:,s,t] = rand(MvNormal(drift(C,result[:,s,t-1]),Hermitian(model.Σ)),)
             end
         end
 

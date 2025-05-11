@@ -93,3 +93,11 @@ obs4 = model.M0 + model.M1 * [0., 2.69] + model.M2 * sm4
 returns = κ .+ ρ*obs4[2] + obs4[1] - obs3[2]
 exp(returns) 
 
+
+using Distributions
+
+r = -.25
+
+cdf(Normal(.08, .16), r)
+
+cdf(LocationScale(.08, .16, TDist(100)), r)

@@ -119,6 +119,9 @@ V = [vdp vrp_dp vπp_dp vda_dp vra_dp vπa_dp vea_dp vτa_dp zeros(5)'
 ]
 
 isposdef(V)
+isposdef(Hermitian(V))
+
+Symmetric(V)
 ispossemdef(M::Matrix{Fl}) where Fl = all(i -> i >= 0.0, eigvals(M))
 ispossemdef(V)
 

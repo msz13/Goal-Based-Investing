@@ -44,11 +44,11 @@ module FinancialBVAR
        
         for n in 1:n_samples+burnin
 
-            posterior_sigma[n,:,:] = rand(InverseWishart(model.df,model.S_OLS))
+            posterior_sigma[n,:,:] = rand(InverseWishart(model.df, Symmetric(model.S_OLS)))
 
             Beta_mean = vec(model.C_OLS)
-            Beta_var = kron(posterior_sigma[n,:,:],Hermitian(inv(transpose(model.X) * model.X)))
-            posterior_beta[n,:,:] = rand(MvNormal(Beta_mean,Hermitian(Beta_var)))
+            Beta_var = kron(posterior_sigma[n,:,:],inv(transpose(model.X) * model.X))
+            posterior_beta[n,:,:] = rand(MvNormal(Beta_mean, Symmetric(Beta_var)))
         
         end               
        

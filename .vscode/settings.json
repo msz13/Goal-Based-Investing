@@ -4,6 +4,10 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "julia.environmentPath": "c:\\Users\\matsz\\programowanie\\Optymalizacja_portfela\\FinancialPlanner"
+    "julia.NumThreads": 4,
+    "settingsSync.ignoredSettings": [
+        "-julia.NumThreads"
+    ],
+
    
 }

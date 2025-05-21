@@ -24,6 +24,14 @@ function prepare_var_data(Y::Matrix{Float64}, p::Int, X::Union{Matrix{Float64},V
     return Y[p+1:end, :], predictors
 end
 
+function est_covariance(sigmas, L)
+    n = length(sigmas)
+    corm  = zeros(n,n)
+    corm[tril(ones(Bool, n, n))] = L
+    return Diagonal(σ) * corm * corm' * Diagonal(σ)
+end
+
+
 
 @model function mv_model(Y::Matrix{Float64})
     T, n = size(Y)   

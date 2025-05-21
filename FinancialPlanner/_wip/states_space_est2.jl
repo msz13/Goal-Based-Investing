@@ -139,6 +139,8 @@ CorrM = Symmetric([1 .91 -.7 -.38 -.3 .23 .74 -0.02
 
 CorrM = collect(CorrM)
 
+
+
 isposdef(CorrM)
 
 VC = cor2cov(CorrM, sigmas)

@@ -28,7 +28,7 @@ function est_covariance(sigmas, L)
     n = length(sigmas)
     corm  = zeros(n,n)
     corm[tril(ones(Bool, n, n))] = L
-    return Diagonal(σ) * corm * corm' * Diagonal(σ)
+    return Diagonal(sigmas) * corm * corm' * Diagonal(sigmas)
 end
 
 

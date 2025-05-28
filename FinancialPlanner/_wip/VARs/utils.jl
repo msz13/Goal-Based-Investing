@@ -102,33 +102,33 @@ function cum_returns_in_periods(scenarios, periods, freq, annualise=false)
 
 end
 
-function print_scenarios_summary(scenarios:: Array{Float64, 3})
-    n_periods =  size(scenarios,1)
+function print_scenarios_summary(scenarios:: Array{Float64, 3}, assets_names, periods)
+    n_assets, n_periods, _ =  size(scenarios)
+   
+    means = zeros(n_periods, n_assets)
+    stds = zeros(n_periods, n_assets)
+    skew = zeros(n_periods, n_assets)
+    kurt = zeros(n_periods, n_assets)
 
-    means = zeros(4, 4)
-    stds = zeros(4, 4)
-    skew = zeros(4, 4)
-    kurt = zeros(4, 4)
-
-    for a in 1:4
+    for a in 1:n_assets
     
-        means[:,a] = mean(ret_in_years[a,:,:], dims=2)
-        stds[:,a] = std(ret_in_years[a, :,:], dims=2)
+        means[:,a] = mean(scenarios[a,:,:], dims=2)
+        stds[:,a] = std(scenarios[a, :,:], dims=2)
         
         for t in 1:n_periods
-        skew[t,a] = skewness(ret_in_years[a, t,:])
+        skew[t,a] = skewness(scenarios[a, t, :])
         end
         
         for t in 1:n_periods
-        kurt[t,a] = kurtosis(ret_in_years[a, t,:])
+        kurt[t,a] = kurtosis(scenarios[a, t,:])
         end 
 
     end
 
-    pretty_table(round.(means, digits=4), backend = Val(:html), header=[:USA, :Bonds, :World, :EM], row_labels= ["1", "5", "10", "25"], title="Means")
-    pretty_table(round.(stds, digits=4), backend = Val(:html), header=[:USA, :Bonds, :World, :EM], row_labels= ["1", "5", "10", "25"], title="Standard devations")
-    pretty_table(round.(skew, digits=4), backend = Val(:html), header=[:USA, :Bonds, :World, :EM], row_labels= ["1", "5", "10", "25"], title="Skewness")
-    pretty_table(round.(kurt, digits=4), backend = Val(:html), header=[:USA, :Bonds, :World, :EM], row_labels= ["1", "5", "10", "25"], title="Kurtosis") 
+    pretty_table(round.(means, digits=4), backend = Val(:html), header=assets_names, row_labels = periods, title="Means")
+    pretty_table(round.(stds, digits=4), backend = Val(:html), header=assets_names, row_labels = periods, title="Standard devations")
+    pretty_table(round.(skew, digits=4), backend = Val(:html), header=assets_names, row_labels = periods, title="Skewness")
+    pretty_table(round.(kurt, digits=4), backend = Val(:html), header=assets_names, row_labels = periods, title="Kurtosis") 
 
 end
 

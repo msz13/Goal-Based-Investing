@@ -3,6 +3,31 @@ using PrettyTables
 using TimeSeries
 
 
+function prepare_var_data(Y::Matrix{Float64}, p::Int, X::Union{Matrix{Float64},Vector{Float64}} = Matrix{Float64}(undef, 0, 0), add_intercept::Bool = false)
+    T, n = size(Y)
+    Y_lagged = zeros(T - p, n * p)
+    for t in (p + 1):T
+        Y_lagged[t - p, :] = Y[t-p:t-1, :]'
+    end
+
+    predictors = Y_lagged
+
+    if !isempty(X)
+        if size(X, 1) != T
+            error("The number of rows in X must be equal to the number of rows in Y.")
+        end
+        X_subset = X[p+1:end, :]
+        predictors = hcat(predictors, X_subset)
+    end
+
+    if add_intercept
+        intercept = ones(T - p, 1)
+        predictors = hcat(intercept, predictors)
+    end
+
+    return Y[p+1:end, :], predictors
+end
+
 function returns_summarystats(data::TimeArray,t)
     names = colnames(data)
     returns = transpose(values(data))
@@ -133,12 +158,12 @@ function print_scenarios_summary(scenarios:: Array{Float64, 3}, assets_names, pe
 end
 
 
-function print_scenarios_percentiles(scenarios, perc, title="")
+function print_scenarios_percentiles(scenarios, perc, periods_names, title="")
     years = size(scenarios, 1)
     simulation_perc = zeros(years, length(perc))
 
     for t in 1:years
         simulation_perc[t,:] = quantile(scenarios[t,:],perc)
     end
-    pretty_table(round.(simulation_perc, digits=4), backend = Val(:html),header=perc, row_labels=1:years, title=title)
+    pretty_table(round.(simulation_perc, digits=4), backend = Val(:html),header=perc, row_labels=periods_names, title=title)
 end

@@ -3,7 +3,7 @@ using Distributions, StatsBase
 using Revise
 
 includet("xu_model.jl")
-
+include("VARs/utils.jl")
 
 Θ_mean = -1.01E-04
 ρθθ = 0.1395 
@@ -42,19 +42,31 @@ pΘd = 0.9040
 output_step(Θ_p, Θstate_p, -1.01E-04, 500., 12.92)
 
 n_samples = 1000
+T =  120
 
-Θ, Θu, Θd = zeros(n_samples), zeros(n_samples), zeros(n_samples) 
+Θ, Θu, Θd = zeros(n_samples, T), zeros(n_samples, T), zeros(n_samples, T) 
 
 
 for s in 1:n_samples
-    Θ[s], Θu[s], Θd[s] =  output_step(Θ_p, Θstate_p, .005, 500., 10.92)
+    Θ[s, 1], Θu[s, 1], Θd[s, 1] =  output_step(Θ_p, Θstate_p, .005, 500., 12.91)
 end
 
-quantile(Θ, [.05, .25, .5, .75, .95]) #* 12
+for t in 2:T
+    for s in 1:n_samples
+        Θ[s, t], Θu[s, t], Θd[s, t] =  output_step(Θ_p, Θstate_p, Θ[s, t-1], Θu[s, t-1], Θd[s, t-1])
+    end
+end
 
-quantile(Θu, [.05, .25, .5, .75, .95])
-quantile(Θd, [.05, .25, .5, .75, .95]) 
+quantile(Θ[:,1], [.03, .25, .5, .75, .97]) * 100 #* 12
 
+quantile(Θu[:,1], [.03, .25, .5, .75, .97])
+quantile(Θd[:,1], [.03, .25, .5, .75, .97]) 
+
+theta = reshape(Θ', (1, T, n_samples))
+
+cum_theta = cum_returns_in_periods(theta, [1, 5], 12, true)
+
+quantile(cum_theta[1, 1, :], [.03, .25, .5, .75, .97])'
 
 params = π_params(
     0.0017,
@@ -71,7 +83,6 @@ params = π_params(
 ) 
 
 
-
 π_state = πstate_params(3.9091, 100.)
 
 inflation_step(params, π_state ,-1.01E-04, 500., 12.9194, 0.002, 2., 120., 0.005, 510., 10., 3.79, -5.78)
@@ -82,14 +93,8 @@ for s in 1:n_samples
     π[s] =  inflation_step(params, π_state ,-1.01E-04, 500., 12.9194, 0.0075, 30.5, 90., 0.005, 510., 10., 3.79, -5.78)
 end
 
-quantile(π, [.05, .25, .5, .75, .95]) * 12
+quantile(π, [.03, .25, .5, .75, .97]) * 12
 
 
-exp(1im*π) 
-
-
-Σ
-σ
-
-Λ
-λ
+bl = rand(Geometric(1/120), 1000)
+quantile(bl, [.03, .25, .5, .75, .97])'

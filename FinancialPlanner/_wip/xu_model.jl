@@ -32,6 +32,7 @@ function output_step(Output_Params:: Output_Params, OutputState_Params:: OutputS
     Θt1 = Θ_mean + ρθθ*(Θt - Θ_mean) + ρθθu*(Θut - Θu_mean) + ρθθd*(Θdt - Θd_mean) + uθ 
     Θut1 = Θu_mean + pΘu*(Θut - Θu_mean) + σΘu * ωΘu
     Θdt1 = Θd_mean + pΘd*(Θdt - Θd_mean) + σΘd * ωΘd
+    Θdt1 = Θdt1 > 0 ? Θdt1 : eps()
 
     return Θt1, Θut1, Θdt1, ωΘu, ωΘd
 end

@@ -28,12 +28,54 @@ function prepare_var_data(Y::Matrix{Float64}, p::Int, X::Union{Matrix{Float64},V
     return Y[p+1:end, :], predictors
 end
 
+function max_drawdown_and_length(returns::Matrix{Float64})
+    # returns: Matrix where each column is a scenario, each row a time step
+    # Returns a tuple of vectors: (max_drawdowns, max_dd_lengths)
+    
+    n_scenarios = size(returns, 2)
+    max_drawdowns = zeros(Float64, n_scenarios)
+    max_dd_lengths = zeros(Int, n_scenarios)
+    
+    for scenario in 1:n_scenarios
+        # Calculate cumulative returns and convert to price path
+        cum_returns = cumsum(returns[:, scenario])
+        prices = exp.(cum_returns)  # Assuming log-returns, starting price = 1
+        
+        max_price = prices[1]  # Track historical peak
+        max_drawdown = 0.0     # Maximum drawdown (percentage)
+        current_dd_length = 0  # Current drawdown length
+        max_dd_length = 0      # Maximum drawdown length
+        start_idx = 1          # Start index of current drawdown
+        
+        for t in 2:length(prices)
+            if prices[t] >= max_price
+                # New peak, reset drawdown
+                max_price = prices[t]
+                current_dd_length = 0
+                start_idx = t
+            else
+                # In drawdown, update length and drawdown
+                current_dd_length = t - start_idx + 1
+                current_drawdown = (max_price - prices[t]) / max_price
+                max_dd_length = max(max_dd_length, current_dd_length)
+                max_drawdown = max(max_drawdown, current_drawdown)
+            end
+        end
+        
+        max_drawdowns[scenario] = max_drawdown
+        max_dd_lengths[scenario] = max_dd_length
+    end
+    
+    return (max_drawdowns, max_dd_lengths)
+end
+
 function returns_summarystats(data::TimeArray,t)
     names = colnames(data)
     returns = transpose(values(data))
     n_assets = size(returns)[1]
     n_digits = 4
 
+    
     stats = [ Dict(
         :mean => round(mean(returns[i,:]) * t, digits=n_digits), 
         :std => round(std(returns[i,:]) * t^0.5, digits=n_digits),
@@ -45,7 +87,7 @@ function returns_summarystats(data::TimeArray,t)
         :p75th => round(percentile(returns[i,:],75) * t, digits=n_digits),
         :min => round(minimum(returns[i,:]) * t, digits=n_digits),
         :max => round(maximum(returns[i,:]) * t, digits=n_digits),
-        :sr => round((mean(returns[i,:]) * t)/(std(returns[i,:]) * t^0.5), digits=n_digits),
+        :sr => round((mean(returns[i,:]) * t)/(std(returns[i,:]) * t^0.5), digits=n_digits)        
         ) for i in 1:n_assets ]
         
 

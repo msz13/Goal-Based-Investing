@@ -49,3 +49,22 @@ function block_bootstrap(data::Matrix{Tp}, B::Int; block_size::Int=5, random_blo
 
     return result
 end
+
+
+function overlapping_windows(returns, n_steps)
+    n_scenarios = length(returns) - n_steps + 1
+
+    start  = 1
+
+    result = zeros(n_steps, n_scenarios)
+
+    for scenario in 1:n_scenarios
+        end_idx = start + n_steps - 1
+        result[:, scenario] = returns[start:end_idx]
+        start += 1
+    end 
+
+    return result
+
+
+end

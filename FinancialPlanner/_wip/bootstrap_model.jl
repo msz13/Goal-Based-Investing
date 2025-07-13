@@ -52,15 +52,16 @@ end
 
 
 function overlapping_windows(returns, n_steps)
-    n_scenarios = length(returns) - n_steps + 1
+    n_scenarios = size(returns, 1) - n_steps + 1 
+    n_assets = size(returns, 2)
 
     start  = 1
 
-    result = zeros(n_steps, n_scenarios)
+    result = zeros(n_assets, n_steps, n_scenarios)
 
     for scenario in 1:n_scenarios
         end_idx = start + n_steps - 1
-        result[:, scenario] = returns[start:end_idx]
+        result[:, :, scenario] = returns[start:end_idx, :]'
         start += 1
     end 
 

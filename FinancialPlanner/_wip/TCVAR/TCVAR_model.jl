@@ -12,8 +12,8 @@ function TCVAR(
         0 0 Φ21 Φ22
         ]
 
-    B = [1 0 1 0
-         1 1 0 1
+    B = [1. 0 1. 0
+         1. 1. 0 1.
          ]
 
     return LinearGaussianStateSpaceModel(

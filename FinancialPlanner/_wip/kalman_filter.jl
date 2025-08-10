@@ -47,7 +47,7 @@ function kalman_filter(y, A, C, Q, R, x0, P0, u=nothing)
         P_filt[t, :, :] = P_pred[t, :, :] - K * C * P_pred[t, :, :]
         
         # Update log-likelihood
-        loglik += logpdf(MvNormal(y_pred, S), y_t)
+        loglik += logpdf(MvNormal(y_pred, Hermitian(S)), y_t)
         
         # Update state and covariance for next iteration
         x_t = x_filt[t, :]

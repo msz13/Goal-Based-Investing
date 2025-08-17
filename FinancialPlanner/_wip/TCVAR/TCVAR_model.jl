@@ -1,93 +1,75 @@
- 
-using ForwardDiff
 
-function cholesky_decomposition(x::AbstractMatrix) 
-    if isposdef(x)
-        return cholesky(x)
-    elseif all(i -> i >= 0.0, eigvals(x))
-        size_matrix = size(x, 1)
-        chol_x = cholesky(x .+ I(size_matrix) .* floatmin())
 
-        chol_x = ForwardDiff.ignore_derivatives() do
-            chol_x.L[:, :]  = round.(Float64, chol_x.L; digits = 10)
-            chol_x.U[:, :]  = round.(Float64, chol_x.U; digits = 10)
-            chol_x.UL[:, :] = round.(Float64, chol_x.UL; digits = 10)
-            chol_x
-        end
-        return chol_x
-    else
-        @error("Matrix is not positive definite or semidefinite. Cholesky decomposition cannot be performed.", x)
-    end
+
+"""
+State Space Model structure
+x_t = F * x_{t-1} + G * u_t    (state equation)
+y_t = H * x_t + v_t            (observation equation)
+
+where:
+- x_t is the state vector at time t
+- y_t is the observation vector at time t
+- u_t ~ N(0, Q) is the state noise
+- v_t ~ N(0, H) is the observation noise
+- T is the state transition matrix
+- R is the state noise coefficient matrix
+- Z is the observation matrix
+"""
+
+struct StateSpaceModel
+    T::Matrix{Float64}  # State transition matrix
+    R::Matrix{Float64}  # State noise coefficient matrix
+    Z::Matrix{Float64}  # Observation matrix
+    Q::Matrix{Float64}  # State noise covariance
+    H::Matrix{Float64}  # Observation noise covariance
+    initial_state_mean::Vector{Float64}
+    initial_state_covariance::Matrix{Float64}
+
+
 end
 
-# for Kalman filter stability
-symmetrize!(A::Symmetric) = A
-symmetrize!(A) = Symmetric(A)
-symmetrize!(A::Number) = A
 
- 
- # Build SSM from parameter matrices (accepts full 2x2 Q_trend and Q_cycle)
-function TCVAR(phi::AbstractMatrix, Q_trend::AbstractMatrix, Q_cycle::AbstractMatrix)
-    # Infer numeric type from phi (covers Float64 and Dual)
-    T = promote_type(eltype(phi), eltype(Q_trend), eltype(Q_cycle))
+function tc_var(var_coeff, trend_cov, cycle_cov, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
 
-    # Transition matrix A
-    A = zeros(T, 4, 4)
-    A[1:2, 1:2] .= one(T) .* I(2)    # trend random walk
-    A[3:4, 3:4] .= phi               # cycle VAR(1)
-
-    # Transition intercept
-    b = zeros(T, 4)
-
-    # Process noise covariance Q
-    Q = zeros(T, 4, 4)
-    Q[1:2, 1:2] .= Q_trend
-    Q[3:4, 3:4] .= Q_cycle
-    #z[diagind(z)] .+= eps()
-
-    # Observation matrix H
-    H = T[ 1  0  1  0
-           1  1  0  1
+    T = [I(2)      zeros(2,2) # Transition  matrix
+         zeros(2,2) var_coeff
          ]
 
-    # Observation noise covariance R (tiny to avoid singularity)
-    #R = Matrix{T}(I, 2, 2) * eps(T)
-    R = zeros(T,2,2)
+    Q = [trend_cov zeros(2,2) #State noise covariance
+         zeros(2,2) cycle_cov]
 
-    # Initial state mean and covariance
-    x0 = zeros(T, 4)
-    Σ0 = Matrix{T}(I, 4, 4) * T(100.0)
+    R = Matrix(I, 4 , 4)  # State noise coefficient matrix
+    Z = [1 0 1 0
+         1 1 0 1]  # Observation matrix
 
-    # Observation intercept
-    c = zeros(T, 2)
+    H = Matrix(I, 2, 2) * eps()  # Observation noise covariance
 
-    return create_homogeneous_linear_gaussian_model(x0, Σ0, A, b, PDMat(Q, cholesky_decomposition(symmetrize!(Q))) , H, c, PDMat(R, cholesky_decomposition(symmetrize!(R))))
+     initial_state_mean = [initial_trend_mean; initial_cycle_mean]
+
+     initial_state_covariance = [initial_trend_covariance zeros(2,2)
+                                 zeros(2,2) initial_cycle_covariance]
+
+  
+    return StateSpaceModel(T, R, Z, Q, H, initial_state_mean, initial_state_covariance)
+    
+
 end
 
 
-@model function trendcycle_model(Y::AbstractVector; k_tr::Real=4.0, Ψ_tr::AbstractMatrix=Matrix(I,2,2), k_cyc::Real=4.0, Ψ_cyc::AbstractMatrix=Matrix(I,2,2))
-    # Inverse-Wishart priors (Distributions.jl supports InverseWishart)
-    Q_tr ~ InverseWishart(k_tr, Ψ_tr)
-    Q_cyc ~ InverseWishart(k_cyc, Ψ_cyc)
+function sample(model:: StateSpaceModel, n_steps)
 
-    # Observation noise std devs (positive)
-    σ_obs1 ~ Normal(0.0, 1.0)
-    σ_obs2 ~ Normal(0.0, 1.0)
+    n_variables, n_states = size(model.Z)
+    states = zeros(n_steps, n_states)
+    obs = zeros(n_steps, n_variables)
 
+    states[1, :] = rand(MvNormal(model.initial_state_mean, model.initial_state_covariance))
+    obs[1, :] = model.Z * states[1,:] .+ rand(MvNormal(zeros(n_variables), model.H))
+    
+    for t in 2:n_steps
+        states[t,:] = model.T * states[t-1,:] + rand(MvNormal(zeros(n_states), model.Q))
+        obs[t, :] = model.Z * states[t,:] + rand(MvNormal(zeros(n_variables), model.H))
+    end
 
+    return states, obs
 
-    # Cycle VAR(1) coefficients
-    φ11 ~ Normal(0.0, 1)
-    φ12 ~ Normal(0.0, 1)
-    φ21 ~ Normal(0.0, 1)
-    φ22 ~ Normal(0.0, 1)
-
- 
-    phi = [φ11 φ12; φ21 φ22]
-  
-    tcvar_model = TCVAR(phi, Q_tr, Q_cyc)
-
-    # compute marginal log-likelihood via Kalman filter
-    _, ll = GeneralisedFilters.filter(tcvar_model, KF(), Y)
-    Turing.@addlogprob!(ll)
 end

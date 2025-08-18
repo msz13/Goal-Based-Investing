@@ -108,7 +108,7 @@ function carter_kohn_sampler(model::StateSpaceModel, observations::Matrix{Float6
                 smoothing_gain * (state_smoothed_current[t+1, :] - state_predicted_t_plus_1)
             
             covariance_smoothed = covariance_filtered_t - 
-                smoothing_gain * covariance_predicted_t_plus_1 * smoothing_gain'
+                smoothing_gain * model.T*covariance_filtered_t
             
             # Ensure covariance is positive definite
             covariance_smoothed = (covariance_smoothed + covariance_smoothed') / 2

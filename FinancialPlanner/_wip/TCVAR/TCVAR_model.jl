@@ -55,14 +55,22 @@ function tc_var(var_coeff, trend_cov, cycle_cov, initial_trend_mean, initial_cyc
 
 end
 
+function sample(model:: StateSpaceModel,  n_steps)
+        
+    initial_states = rand(MvNormal(model.initial_state_mean, model.initial_state_covariance))    
 
-function sample(model:: StateSpaceModel, n_steps)
+    return sample(model, initial_states, n_steps)
+   
+end
+
+function sample(model:: StateSpaceModel, initial_state, n_steps)
 
     n_variables, n_states = size(model.Z)
     states = zeros(n_steps, n_states)
     obs = zeros(n_steps, n_variables)
 
-    states[1, :] = rand(MvNormal(model.initial_state_mean, model.initial_state_covariance))
+    
+    states[1, :] = initial_state
     obs[1, :] = model.Z * states[1,:] .+ rand(MvNormal(zeros(n_variables), model.H))
     
     for t in 2:n_steps
@@ -73,3 +81,4 @@ function sample(model:: StateSpaceModel, n_steps)
     return states, obs
 
 end
+

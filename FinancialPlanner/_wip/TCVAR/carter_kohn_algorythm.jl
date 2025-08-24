@@ -136,9 +136,7 @@ function carter_kohn_sampler(model::StateSpaceModel, observations::Matrix{Float6
     # Run Kalman filter forward pass
     state_filtered, covariance_filtered, state_predicted, covariance_predicted, _ = 
         kalman_filter(model, observations)
-    
-    
-        
+                
     state_smoothed_current = zeros(n_time_steps, n_states)
         
     # Sample final state from filtered distribution at T

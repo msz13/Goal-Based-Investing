@@ -2,7 +2,7 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "384ef6d927543de928b9cb7eac297147b9d39c48"
+project_hash = "577db198cb67cba53cfdd4b2023fb8ea59e4ad99"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "7927b9af540ee964cc5d1b73293f1eb0b761a3a1"
@@ -1369,9 +1369,9 @@ version = "3.4.3"
 
 [[deps.MCMCChains]]
 deps = ["AbstractMCMC", "AxisArrays", "DataAPI", "Dates", "Distributions", "IteratorInterfaceExtensions", "KernelDensity", "LinearAlgebra", "MCMCDiagnosticTools", "MLJModelInterface", "NaturalSort", "OrderedCollections", "PrettyTables", "Random", "RecipesBase", "Statistics", "StatsBase", "StatsFuns", "TableTraits", "Tables"]
-git-tree-sha1 = "a1b9bf62acb012e4a717562f83f859257c5b6fec"
+git-tree-sha1 = "f3993c723865f670102011ef22811e2bbb0ef1a8"
 uuid = "c7f686f2-ff18-58e9-bc7b-31028e88f75d"
-version = "7.1.0"
+version = "7.2.0"
 
 [[deps.MCMCDiagnosticTools]]
 deps = ["AbstractFFTs", "DataAPI", "DataStructures", "Distributions", "LinearAlgebra", "MLJModelInterface", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Tables"]

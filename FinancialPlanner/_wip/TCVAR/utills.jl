@@ -22,31 +22,32 @@ function minnesota_priors(Y; λ1=0.2, λ2=0.5, λ3=1.0, p=2, zero_ownlag=fill(fa
     @assert length(zero_ownlag) == N "zero_ownlag must be length N"
 
     σ_y = std.(eachcol(Y))
-    k_eq = N * p + 1
+    k_eq = N * p 
     total_params = N * k_eq
 
-    priors = Vector{Normal}(undef, total_params)
+    prior_means = zeros(total_params)
+    prior_variances = zeros(N, k_eq)
+
     idx = 1
     for eq in 1:N
         for lag in 1:p
             for var in 1:N
                 if var == eq
                     μ = (lag == 1 && !zero_ownlag[eq]) ? 1.0 : 0.0
-                    σ = λ1 / lag
+                    σ = λ1 / lag ^ λ3
                 else
                     μ = 0.0
-                    σ = λ1 * λ2 * (σ_y[eq] / σ_y[var]) / lag
+                    σ = λ1 * λ2 * (σ_y[eq] / σ_y[var]) / lag^λ3
                 end
-                priors[idx] = Normal(μ, σ)
+                prior_means[idx] = μ
+                prior_variances[eq, lag*var] = σ
                 idx += 1
             end
         end
-        μ_const = 0.0
-        σ_const = λ1 * λ3 * σ_y[eq]
-        priors[idx] = Normal(μ_const, σ_const)
-        idx += 1
+            
+        #idx += 1
     end
 
-    return priors
+    return prior_means, prior_variances
   
 end

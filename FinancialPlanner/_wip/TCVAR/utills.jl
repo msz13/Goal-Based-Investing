@@ -17,11 +17,10 @@ Return an `arraydist` object for Minnesota priors over VAR(p) coefficients.
 - `dist`: an `arraydist` of Normal distributions in VAR stacking order:
     for eq = 1..N: [lag1 var1, lag1 var2, ..., lagp varN, constant]
 """
-function minnesota_priors(Y; λ1=0.2, λ2=0.5, λ3=1.0, p=2, zero_ownlag=fill(false, size(Y,2)))
+function minnesota_priors(σ_y; λ1=0.2, λ2=0.5, λ3=1.0, p=2, zero_ownlag=fill(false, size(Y,2)))
     T, N = size(Y)
     @assert length(zero_ownlag) == N "zero_ownlag must be length N"
-
-    σ_y = std.(eachcol(Y))
+    
     k_eq = N * p 
     total_params = N * k_eq
 

@@ -33,4 +33,4 @@ function prepare_var_data(Y::Matrix{Float64}, p::Int, X::Union{Matrix{Float64},V
 end
 
 
-posterior_beta_coefficient(Y, X, beta_mean, beta_var) = inv(X'X + 1 ./ beta_var)*(X'Y + (1 ./ beta_var)*beta_mean)
+posterior_beta_coefficient(Y, X, beta_mean, beta_var_inv) = inv(X'X + beta_var_inv)*(X'Y + beta_var_inv*beta_mean)

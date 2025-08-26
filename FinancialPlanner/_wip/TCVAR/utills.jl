@@ -18,7 +18,7 @@ Return an `arraydist` object for Minnesota priors over VAR(p) coefficients.
     for eq = 1..N: [lag1 var1, lag1 var2, ..., lagp varN, constant]
 """
 function minnesota_priors(σ_y; λ1=0.2, λ2=0.5, λ3=1.0, p=2, zero_ownlag=fill(false, size(Y,2)))
-    T, N = size(Y)
+    N = size(σ_y, 1)
     @assert length(zero_ownlag) == N "zero_ownlag must be length N"
     
     k_eq = N * p 
@@ -33,10 +33,10 @@ function minnesota_priors(σ_y; λ1=0.2, λ2=0.5, λ3=1.0, p=2, zero_ownlag=fill
             for var in 1:N
                 if var == eq
                     μ = (lag == 1 && !zero_ownlag[eq]) ? 1.0 : 0.0
-                    σ = λ1 / lag ^ λ3
+                    σ = (λ1 / lag )^ 2
                 else
                     μ = 0.0
-                    σ = λ1 * λ2 * (σ_y[eq] / σ_y[var]) / lag^λ3
+                    σ = ((λ1 * λ2 * (σ_y[eq] )/( σ_y[var]) * lag))^2
                 end
                 prior_means[idx] = μ
                 prior_variances[eq, lag*var] = σ
@@ -47,6 +47,6 @@ function minnesota_priors(σ_y; λ1=0.2, λ2=0.5, λ3=1.0, p=2, zero_ownlag=fill
         #idx += 1
     end
 
-    return prior_means, prior_variances
+    return prior_means, vec(prior_variances)
   
 end

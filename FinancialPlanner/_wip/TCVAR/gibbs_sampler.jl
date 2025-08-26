@@ -22,8 +22,8 @@ function gibs_sampler(data, priors, n_samples)
                              p (.011)^2]
 
      
-    true_initial_trend_mean = [.02, .01]
-    true_initial_trend_covariance = Matrix(I, 2,2)
+    
+    true_initial_trend_covariance = diagm([.01, .01]) #Matrix(I, 2,2)
     true_initial_cycle_mean = [.0, .0]
     true_initial_cycle_covariance = [(.015)^2 0
                                      0 (.011)^2]   

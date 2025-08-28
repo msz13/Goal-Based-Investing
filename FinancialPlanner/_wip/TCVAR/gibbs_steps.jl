@@ -33,4 +33,7 @@ function prepare_var_data(Y::Matrix{Float64}, p::Int, X::Union{Matrix{Float64},V
 end
 
 
-posterior_beta_coefficient(Y, X, beta_mean, beta_var_inv) = inv(X'X + beta_var_inv)*(X'Y + beta_var_inv*beta_mean)
+posterior_beta_coefficient_mean(Y, X, beta_mean, beta_var_inv) = inv(X'X + beta_var_inv)*(X'Y + beta_var_inv*beta_mean)
+
+
+posterior_beta_coefficient_var(X, Σ, Ω_inv) = kron(Σ, inv(X'X + Ω_inv))

@@ -48,7 +48,7 @@ function covariance_posterior_dist(Y, X, β_posterior_μ, posterior_df, variance
 
     S = ε' * ε + β_diff' * Ω_inv * β_diff  + variance_prior
 
-    return InverseWishart(posterior_df, S)
+    return InverseWishart(posterior_df, collect(Hermitian(S)))
 
 end
 
@@ -68,7 +68,6 @@ function sample_var_params(data, p, β_prior_μ, Ω_inv, S, df)
 
     Y, X = prepare_var_data(data, p)
     
-
     
     β_hat = posterior_beta_coefficient_mean(Y, X, β_prior_μ, Ω_inv) #mean of posterior distribution of coefficients
 

@@ -24,10 +24,14 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
 
     #prior of covariance matrix, for lag one
     λ = priors.cycle_coeff_shrinkage_param
-    Ω = [λ^2, λ^2] ./ diag(priors.cycle_covariance_scale)
+    Ω = [λ^2, λ^2] ./ diag(priors.cycle_covariance_mean)
     Ω_inv = inv(Diagonal(Ω))
 
-    initial_cycle_covariance = priors.cycle_covariance_scale
+    
+    trend_covariance_scale = priors.trend_covariance_mean * (priors.trend_covariance_df + n_obs + 1)
+    cycle_covariance_scale = priors.cycle_covariance_mean * (priors.cycle_covariance_df + n_obs + 1)
+
+    initial_cycle_covariance = priors.cycle_covariance_mean
     
     # Storage for sampled states and variables
     state_smoothed_samples = zeros(n_draws+1, n_time_steps, n_states) #TODO uporzadkowac, co jest samplowane dla states dla initial
@@ -36,7 +40,7 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
     sigmas = zeros(n_draws, n_obs, n_obs)
 
     #sample initial parameters values form prior distribution
-    sampled_trend_covariance[1, :, :] = rand(InverseWishart(priors.trend_covariance_df, priors.trend_covariance_mean))
+    sampled_trend_covariance[1, :, :] = rand(InverseWishart(priors.trend_covariance_df, trend_covariance_scale))
     betas[1, :] = zeros(4) #MvNormal(vec(priors.cycle_coeff_mean), reshape(vec(diagm(Ω)), 4,4))
     sigmas[1, :, :] = Diagonal([.00016, .00016]) # rand(InverseWishart(priors.cycle_covariance_df, priors.cycle_covariance_scale)) 
     
@@ -57,9 +61,9 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
         trends_states = state_smoothed_samples[s, :, [1,2]]
         cycle_states =  state_smoothed_samples[s, :, [3,4]]
 
-        sampled_trend_covariance[s, :, :] = rand(covariance_posterior(trends_states, priors.trend_covariance_mean, dτ_post))
+        sampled_trend_covariance[s, :, :] = rand(covariance_posterior(trends_states, trend_covariance_scale, dτ_post))
 
-        betas[s,:], sigmas[s, :, :] = sample_var_params(cycle_states, 1, priors.cycle_coeff_mean, Ω_inv, priors.cycle_covariance_scale, dc_post)       
+        betas[s,:], sigmas[s, :, :] = sample_var_params(cycle_states, 1, priors.cycle_coeff_mean, Ω_inv, cycle_covariance_scale, dc_post)       
 
     end
 

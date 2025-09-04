@@ -142,6 +142,9 @@ function carter_kohn_sampler(model::StateSpaceModel, observations::Matrix{Float6
     # Sample final state from filtered distribution at T
     final_state_mean = state_filtered[end, :]
     final_state_covariance = covariance_filtered[end, :, :] + I(4) * eps()
+    if (!isposdef(final_state_covariance))
+        throw("not posistive define $final_state_covariance")
+    end
     state_smoothed_current[end, :] = rand(MvNormal(final_state_mean, Hermitian(final_state_covariance)))
         
     # Backward pass: sample states from T-1 down to 1

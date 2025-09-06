@@ -141,11 +141,12 @@ function carter_kohn_sampler(model::StateSpaceModel, observations::Matrix{Float6
         
     # Sample final state from filtered distribution at T
     final_state_mean = state_filtered[end, :]
-    final_state_covariance = covariance_filtered[end, :, :] + I(4) * eps()
+    final_state_covariance = covariance_filtered[end, :, :] + I(4) * 1e-12
+    final_state_covariance = Hermitian(final_state_covariance)
     if (!isposdef(final_state_covariance))
         throw("not posistive define $final_state_covariance")
     end
-    state_smoothed_current[end, :] = rand(MvNormal(final_state_mean, Hermitian(final_state_covariance)))
+    state_smoothed_current[end, :] = rand(MvNormal(final_state_mean, final_state_covariance))
         
     # Backward pass: sample states from T-1 down to 1
     for t in (n_time_steps-1):-1:1
@@ -205,6 +206,29 @@ function compute_posterior_statistics(state_smoothed_samples::Array{Float64,3}; 
     end
     
     return state_smoothed_mean, state_smoothed_lower, state_smoothed_upper
+end
+
+#TODO sprawdizc cze reshape beta jest dobre
+
+function sample_states(cycle_coeffs, trend_covariance, cycle_covariance, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
+
+    model = tc_var(
+                cycle_coeffs,
+                trend_covariance,
+                cycle_covariance,       
+                initial_trend_mean, 
+                initial_cycle_mean,
+                initial_trend_covariance,
+                initial_cycle_covariance                              
+                )
+        
+        state_smoothed_samples = carter_kohn_sampler(model, data)
+
+        trends_states = state_smoothed_samples[:, [1,2]]
+        cycle_states =  state_smoothed_samples[:, [3,4]]
+
+        return trends_states, cycle_states
+
 end
 
 # Example usage

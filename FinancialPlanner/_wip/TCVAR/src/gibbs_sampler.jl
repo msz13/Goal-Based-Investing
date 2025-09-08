@@ -1,7 +1,21 @@
+function covariance_posterior(data, scale_prior, d_posterior)
+    
+    res = diff(data, dims=1)
+    posterior_mean = res' * res .+ scale_prior
+
+    return InverseWishart(d_posterior, posterior_mean)    
+
+end
+
+
+
+
 """
     data: T x m matrix of observations
     priors: Named tuples of priors
     n_samples: number of samples
+    burnin: numper of samples to discart
+    thin: skip nth sample
 """
 
 function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
@@ -50,6 +64,7 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
     for s in 2:n_draws
               
         trends_states[s,:,:], cycle_states[s,:,:] = sample_states(
+                                       data, 
                                        reshape(betas[s-1, :], n_obs, k), 
                                        trend_covariance[s-1,:,:], 
                                        sigmas[s-1,:,:], 

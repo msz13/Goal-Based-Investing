@@ -170,7 +170,7 @@ function carter_kohn_sampler(model::StateSpaceModel, observations::Matrix{Float6
             
         # Ensure covariance is positive definite
         covariance_smoothed = (covariance_smoothed + covariance_smoothed') / 2
-        covariance_smoothed += 1e-10 * I
+        covariance_smoothed += 1e-6 * I
             
         # Sample state at time t
         state_smoothed_current[t, :] = rand(MvNormal(state_smoothed_mean, covariance_smoothed))

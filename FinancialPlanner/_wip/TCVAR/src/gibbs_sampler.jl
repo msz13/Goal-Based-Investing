@@ -75,8 +75,8 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
 
         trend_covariance[s, :, :] = rand(covariance_posterior(trends_states[s,:,:], trend_covariance_scale, dτ_post))
 
-        betas[s,:], sigmas[s, :, :] = sample_var_params(cycle_states[s,:,:], 1, priors.cycle_coeff_mean, Ω_inv, cycle_covariance_scale, dc_post)       
-
+        betas[s,:], sigmas[s, :, :] = sample_var_params(cycle_states[s,:,:], 1, priors.cycle_coeff_mean, Ω_inv, cycle_covariance_scale, dc_post) 
+               
     end
 
     t_trends_states = trends_states[burnin+1:thin:end, :, :]

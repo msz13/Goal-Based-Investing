@@ -35,8 +35,8 @@ posterior_beta_coefficient_mean(Y, X, beta_mean, Ω_inv) = inv(X'X + Ω_inv)*(X'
 function beta_posterior_dist(X, Σ, beta_posterior, Ω_inv)
       
 
-    beta_var = kron(Σ, inv(X'X + Ω_inv) + I(4) * 1e12)
-    return MvNormal(vec(beta_posterior), beta_var)
+    beta_var = kron(Σ, inv(X'X + Ω_inv)) + I(4) * 1e-5
+    return MvNormal(vec(beta_posterior), Hermitian(beta_var))
   
 end
 

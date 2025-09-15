@@ -184,9 +184,10 @@ end
 
 #TODO sprawdizc cze reshape beta jest dobre
 
-function sample_states(data, cycle_coeffs, trend_covariance, cycle_covariance, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
+function sample_states(data, trend_mapping, cycle_coeffs, trend_covariance, cycle_covariance, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
 
     model = tc_var(
+                trend_mapping,
                 cycle_coeffs,
                 trend_covariance,
                 cycle_covariance,       

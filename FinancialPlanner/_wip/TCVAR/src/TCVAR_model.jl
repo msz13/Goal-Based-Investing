@@ -29,20 +29,23 @@ struct StateSpaceModel
 end
 
 
-function tc_var(var_coeff, trend_cov, cycle_cov, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
+function tc_var(trend_mapping, var_coeff, trend_cov, cycle_cov, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
 
-    T = [I(2)      zeros(2,2) # Transition  matrix
-         zeros(2,2) var_coeff
+    n_variables, n_trends = size(trend_mapping)
+    n_states = n_variables + n_trends
+    
+    T = [I(n_trends) zeros(n_trends, n_variables) # Transition  matrix
+         zeros(n_variables, n_trends) var_coeff
          ]
 
-    Q = [trend_cov zeros(2,2) #State noise covariance
-         zeros(2,2) cycle_cov]
+    Q = [trend_cov zeros(n_trends, n_variables) #State noise covariance
+         zeros(n_variables, n_trends) cycle_cov]
 
-    R = Matrix(I, 4 , 4)  # State noise coefficient matrix
-    Z = [1 0 1 0
-         1 1 0 1]  # Observation matrix
+    R = Matrix(I, n_states, n_states)  # State noise coefficient matrix
+    Z = hcat(trend_mapping, I(n_variables)) # Observation matrix
 
-    H = Matrix(I, 2, 2) * eps()  # Observation noise covariance
+
+     H = Matrix(I, n_variables, n_variables) * eps()  # Observation noise covariance
 
      initial_state_mean = [initial_trend_mean; initial_cycle_mean]
 

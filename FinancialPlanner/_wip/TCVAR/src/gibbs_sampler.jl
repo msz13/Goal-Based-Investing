@@ -18,7 +18,7 @@ end
     thin: skip nth sample
 """
 
-function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
+function gibs_sampler(data, trend_mapping, priors; burnin = 1000, n_samples=1000, thin=1)
 
     n_time_steps, n_obs = size(data) 
     n_trends = 2
@@ -27,8 +27,6 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
     k = n_obs * p #number of var variables 
 
     n_draws = burnin + n_samples
-
-
 
     #posterior degrees pf freedom for trend covariance matrix
     dτ_post = n_time_steps - p + priors.trend_covariance_df
@@ -40,7 +38,6 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
     λ = priors.cycle_coeff_shrinkage_param
     Ω = λ^2 ./ diag(priors.cycle_covariance_mean)
     Ω_inv = inv(Diagonal(Ω))
-
     
     trend_covariance_scale = priors.trend_covariance_mean * (priors.trend_covariance_df + n_obs + 1)
     cycle_covariance_scale = priors.cycle_covariance_mean * (priors.cycle_covariance_df + n_obs + 1)
@@ -65,6 +62,7 @@ function gibs_sampler(data, priors; burnin = 1000, n_samples=1000, thin=1)
               
         trends_states[s,:,:], cycle_states[s,:,:] = sample_states(
                                        data, 
+                                       trend_mapping,
                                        reshape(betas[s-1, :], n_obs, k), 
                                        trend_covariance[s-1,:,:], 
                                        sigmas[s-1,:,:], 

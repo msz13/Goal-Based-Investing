@@ -141,7 +141,7 @@ function carter_kohn_sampler(model::StateSpaceModel, observations::Matrix{Float6
         
     # Sample final state from filtered distribution at T
     final_state_mean = state_filtered[end, :]
-    final_state_covariance = covariance_filtered[end, :, :] + I(4) * 1e-12
+    final_state_covariance = covariance_filtered[end, :, :] + I(n_states) * 1e-12
     final_state_covariance = Hermitian(final_state_covariance)
     if (!isposdef(final_state_covariance))
         throw("not posistive define $final_state_covariance")
@@ -186,6 +186,8 @@ end
 
 function sample_states(data, trend_mapping, cycle_coeffs, trend_covariance, cycle_covariance, initial_trend_mean, initial_cycle_mean, initial_trend_covariance, initial_cycle_covariance)
 
+    n_observations, n_trends = size(trend_mapping)
+
     model = tc_var(
                 trend_mapping,
                 cycle_coeffs,
@@ -199,8 +201,8 @@ function sample_states(data, trend_mapping, cycle_coeffs, trend_covariance, cycl
         
         state_smoothed_samples = carter_kohn_sampler(model, data)
 
-        trends_states = state_smoothed_samples[:, [1,2]]
-        cycle_states =  state_smoothed_samples[:, [3,4]]
+        trends_states = state_smoothed_samples[:, 1:n_trends]
+        cycle_states =  state_smoothed_samples[:, n_trends+1:n_trends+n_observations]
 
         return trends_states, cycle_states
 

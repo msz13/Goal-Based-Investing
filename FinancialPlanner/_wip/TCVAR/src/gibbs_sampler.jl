@@ -7,6 +7,9 @@ function covariance_posterior(data, scale_prior, d_posterior)
 
 end
 
+coeff_names(n_coeffs) = ["β$i" for i in 1:n_coeffs*n_coeffs]
+cycle_covariance_names(n_variables) = ["Σc$i" for i in 1:n_variables*n_variables]
+trend_covariance_names(n_variables) = ["Στ$i" for i in 1:n_variables*n_variables]
 
 
 
@@ -21,7 +24,7 @@ end
 function gibs_sampler(data, trend_mapping, priors; burnin = 1000, n_samples=1000, thin=1)
 
     n_time_steps, n_obs = size(data) 
-    n_trends = 2
+    n_trends = size(trend_mapping, 2)
     n_states = n_trends + n_obs
     p = 1 #number of var lags
     k = n_obs * p #number of var variables 
@@ -79,9 +82,9 @@ function gibs_sampler(data, trend_mapping, priors; burnin = 1000, n_samples=1000
 
     t_trends_states = trends_states[burnin+1:thin:end, :, :]
     t_cycle_states =  cycle_states[burnin+1:thin:end, :, :]
-    t_trend_covariance = Chains(reshape(trend_covariance[burnin+1:thin:end,:,:], n_samples÷thin, n_trends*n_trends, 1), ["Στ[1]", "Στ[2]", "Στ[3]", "Στ[4]"])
-    t_betas = Chains(betas[burnin+1:thin:end,:,:], ["β1", "β2" , "β3", "β4"])
-    t_sigmas = Chains(reshape(sigmas[burnin+1:thin:end,:,:], n_samples÷thin, 4, 1), ["Σc[1]", "Σc[2]", "Σc[3]", "Σc[4]"])
+    t_trend_covariance = Chains(reshape(trend_covariance[burnin+1:thin:end,:,:], n_samples÷thin, n_trends*n_trends, 1), trend_covariance_names(n_trends))
+    t_betas = Chains(betas[burnin+1:thin:end,:,:], cycle_covariance_names(k))
+    t_sigmas = Chains(reshape(sigmas[burnin+1:thin:end,:,:], n_samples÷thin, n_obs*n_obs, 1), cycle_covariance_names(n_obs))
     
     return t_trends_states, t_cycle_states, t_trend_covariance, t_betas, t_sigmas 
 

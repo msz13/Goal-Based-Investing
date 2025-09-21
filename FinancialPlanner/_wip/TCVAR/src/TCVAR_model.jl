@@ -49,8 +49,8 @@ function tc_var(trend_mapping, var_coeff, trend_cov, cycle_cov, initial_trend_me
 
      initial_state_mean = [initial_trend_mean; initial_cycle_mean]
 
-     initial_state_covariance = [initial_trend_covariance zeros(2,2)
-                                 zeros(2,2) initial_cycle_covariance]
+     initial_state_covariance = [initial_trend_covariance zeros(n_trends, n_trends)
+                                 zeros(n_variables, n_variables) initial_cycle_covariance]
 
   
     return StateSpaceModel(T, R, Z, Q, H, initial_state_mean, initial_state_covariance)

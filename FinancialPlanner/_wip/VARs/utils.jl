@@ -277,3 +277,30 @@ function girf(B::Matrix{Float64}, Σ::Matrix{Float64}, h::Int, shock_var::Int)
     
     return girf_matrix
 end
+
+function calculate_equity_returns(div_growth, dp)
+    
+    pd_growth = diff(-dp, dims=1)
+
+    return  pd_growth .+ div_growth[2:end,:] ./100 + log.(1 .+ exp.(dp[2:end,:]))
+       
+
+end
+
+
+"""
+yelds_scenarios: matrix of yelds returns 
+T: maturity
+t: frequency of analises
+"""
+function calculate_bond_returns(yelds_scenarios, T, t)
+
+    yt = yelds_scenarios[2:end,:]
+    ytm1 = yelds_scenarios[1:end-1,:]
+
+    A = ytm1 ./ t
+    C = 1 ./( (1 .+ yt ./2).^(2*(T-1 ./ t)))
+    B = ytm1 ./ yt .* (1 .- C)
+    
+    return A .+ B .+ C .-1 #A .+ B .+ C .- 1
+end

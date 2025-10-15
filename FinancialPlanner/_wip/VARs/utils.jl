@@ -210,7 +210,7 @@ function print_scenarios_percentiles(scenarios, perc, periods_names, title="")
     pretty_table(round.(simulation_perc, digits=4), backend = Val(:html),header=perc, row_labels=periods_names, title=title)
 end
 
-function girf(B::Matrix{Float64}, Σ::Matrix{Float64}, h::Int, shock_var::Int)
+function girf(B::Matrix{Float64}, Σ::Matrix{Float64}, h::Int, shock_var::Int, shock_value)
     """
     Generalized Impulse Response Function (GIRF) for VAR models
     
@@ -242,7 +242,7 @@ function girf(B::Matrix{Float64}, Σ::Matrix{Float64}, h::Int, shock_var::Int)
     # Shock size: one standard deviation shock scaled by covariance
     σⱼ = sqrt(Σ[shock_var, shock_var])
     eⱼ = zeros(K)
-    eⱼ[shock_var] = 1.0
+    eⱼ[shock_var] = shock_value
     
     # Generalized impulse: Σ * eⱼ / σⱼ
     shock = Σ * eⱼ / σⱼ
@@ -302,5 +302,5 @@ function calculate_bond_returns(yelds_scenarios, T, t)
     C = 1 ./( (1 .+ yt ./2).^(2*(T-1 ./ t)))
     B = ytm1 ./ yt .* (1 .- C)
     
-    return A .+ B .+ C .-1 #A .+ B .+ C .- 1
+    return A .+ B .+ C .-1 
 end

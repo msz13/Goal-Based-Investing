@@ -69,7 +69,7 @@ function girf(B::Matrix{Float64}, Σ::Matrix{Float64}, h::Int, shock_var::Int)
         
         # Iterate through horizons
         state = shock_extended
-        for t in 1:h
+        for t in 2:h
             state = F * state
             girf_matrix[t + 1, :] = state[1:K]
         end

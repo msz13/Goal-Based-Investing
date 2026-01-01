@@ -1,5 +1,10 @@
+import Pkg
+Pkg.activate("./FinancialPlanner/")
+pwd()
+
 using Revise
-using Distributions, LinearAlgebra
+using Distributions
+using LinearAlgebra
 using StableRNGs
 
 includet("persistent_dividend_model.jl")
@@ -11,8 +16,13 @@ includet("persistent_dividend_model.jl")
 
 R = [1.45*10^-1, 1.59*10^-14, 3.01*10^-13, 7.43*10^-10, 3.78*10^-12 ]
 
-#Q = diagm([4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09])
-Q = [4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09] ./ 100
+Q = diagm([4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09] ./ 100 .*4)
+#Q = [4.66 * 10^-2, 2.34 * 10^-2, 5.51 * 10^-2, 2.2, 5.0 * 10^-1, 2.53 * 10^-1, 62.11, 2.09] ./ 100
+
+isposdef(Q) 
+MvNormal(zeros(8),Q)
+
+diagm(Q)
 
 sqrt.(R) 
 sqrt.(Q) ./ 100 * 2

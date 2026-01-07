@@ -14,7 +14,7 @@ using Plots
 Calculate annualized realized volatility over a given window
 Assumes daily returns and 252 trading days per year
 """
-function realized_volatility(returns::Vector{Float64}, window::Int; 
+function realized_volatility(returns::Vector{Float64}, window::Int; annualise=false,
                             trading_days_per_year::Int=252)
     n = length(returns)
     rv = Float64[]
@@ -23,8 +23,12 @@ function realized_volatility(returns::Vector{Float64}, window::Int;
         window_returns = returns[(i-window+1):i]
         # Sum of squared returns over window
         sum_sq_returns = sum(window_returns.^2)
+        if(annualise)
         # Annualized volatility
-        vol = sqrt(sum_sq_returns * trading_days_per_year / window)
+            vol = sqrt(sum_sq_returns * trading_days_per_year / window)
+        else
+            vol = sqrt(sum_sq_returns)
+        end
         push!(rv, vol)
     end
     
@@ -241,3 +245,11 @@ p2 = plot(plot_dates, errors[2:end],
 hline!(p2, [0], color=:black, linestyle=:dash, label="Zero Line", linewidth=1)
 
 display(p2) =#
+
+std(log_returns[Date(2008,09,01):Date(2008,10,31)]) .* sqrt(256) 
+
+log_returns[Date(2008,06,01):Date(2008,08,31)]
+
+year_std = moving(std, log_returns, 42) .* 252
+
+plot(year_std)

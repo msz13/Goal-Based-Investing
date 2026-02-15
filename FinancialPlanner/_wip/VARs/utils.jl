@@ -3,7 +3,7 @@ using PrettyTables
 using TimeSeries
 
 
-function prepare_var_data(Y::Matrix{Float64}, p::Int, X::Union{Matrix{Float64},Vector{Float64}} = Matrix{Float64}(undef, 0, 0), add_intercept::Bool = false)
+function prepare_var_data(Y::Matrix{Float64}, p::Int =1, X::Union{Matrix{Float64},Vector{Float64}} = Matrix{Float64}(undef, 0, 0), add_intercept::Bool = false)
     T, n = size(Y)
     Y_lagged = zeros(T - p, n * p)
     for t in (p + 1):T

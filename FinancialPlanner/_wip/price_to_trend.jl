@@ -1,5 +1,7 @@
 using Statistics
 
+.063 / 4
+
 sigma_tau = .0002 
 sigma_g = 0 #.0006 
 rho_c = .9700

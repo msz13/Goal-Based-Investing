@@ -212,6 +212,7 @@ function find_expected_returns(
     for t in 1:T
         # Step 1: forecast extraordinary-period earnings growth via VAR
         eg = forecast_earnings_growth(earnings_growth[t, :], var_params, n_extrao)
+        eg = eg 
 
         # Step 2: solve for the implied return with two-stage DDM + Brent
         implied_returns[t] = solve_implied_return(
